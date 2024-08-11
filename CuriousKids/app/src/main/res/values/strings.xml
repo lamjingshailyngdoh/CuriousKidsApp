@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">CuriousKids</string>
+    <string name="action_go">Go</string>
+    <string name="app_title">Discover, Learn, and Play with CuriousKids!</string>
+    <string name="label_prompt">Prompt</string>
+    <string name="results_placeholder">(Results will appear here)</string>
+    <string name="story_image1_description">Story Image 1</string>
+    <string name="story_image2_description">Story Image 2</string>
+    <string name="story_image3_description">Story Image 3</string>
+</resources>

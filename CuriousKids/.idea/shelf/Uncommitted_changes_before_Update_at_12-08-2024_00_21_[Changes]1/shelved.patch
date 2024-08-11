@@ -1,0 +1,2714 @@
+Index: ../Khanatang/.idea/vcs.xml
+===================================================================
+diff --git a/../Khanatang/.idea/vcs.xml b/../Khanatang/.idea/vcs.xml
+deleted file mode 100644
+--- a/../Khanatang/.idea/vcs.xml	
++++ /dev/null	
+@@ -1,6 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<project version="4">
+-  <component name="VcsDirectoryMappings">
+-    <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
+-  </component>
+-</project>
+\ No newline at end of file
+Index: ../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/MathModel.kt
+===================================================================
+diff --git a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/MathModel.kt b/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/MathModel.kt
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/MathModel.kt	
++++ /dev/null	
+@@ -1,44 +0,0 @@
+-package com.lyngdoh.khanatang
+-
+-import android.graphics.Bitmap
+-import androidx.lifecycle.ViewModel
+-import androidx.lifecycle.viewModelScope
+-import com.google.ai.client.generativeai.GenerativeModel
+-import com.google.ai.client.generativeai.type.content
+-import kotlinx.coroutines.Dispatchers
+-import kotlinx.coroutines.flow.MutableStateFlow
+-import kotlinx.coroutines.flow.StateFlow
+-import kotlinx.coroutines.flow.asStateFlow
+-import kotlinx.coroutines.launch
+-
+-class MathModel : ViewModel() {
+-    private val _uiState: MutableStateFlow<UiState> = MutableStateFlow(UiState.Initial)
+-    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+-
+-    private val generativeModel = GenerativeModel(
+-        modelName = "gemini-1.5-pro",
+-        apiKey = BuildConfig.apiKey
+-    )
+-
+-    fun sendPrompt(bitmap: Bitmap?, prompt: String) {
+-        _uiState.value = UiState.Loading
+-
+-        viewModelScope.launch(Dispatchers.IO) {
+-            try {
+-                val response = generativeModel.generateContent(
+-                    content {
+-                        if (bitmap != null) {
+-                            image(bitmap)
+-                        }
+-                        text(prompt)
+-                    }
+-                )
+-                response.text?.let { outputContent ->
+-                    _uiState.value = UiState.Success(outputContent)
+-                }
+-            } catch (e: Exception) {
+-                _uiState.value = UiState.Error(e.localizedMessage ?: "")
+-            }
+-        }
+-    }
+-}
+Index: ../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/WordModel.kt
+===================================================================
+diff --git a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/WordModel.kt b/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/WordModel.kt
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/WordModel.kt	
++++ /dev/null	
+@@ -1,63 +0,0 @@
+-package com.lyngdoh.khanatang
+-
+-import android.graphics.Bitmap
+-import androidx.lifecycle.ViewModel
+-import androidx.lifecycle.viewModelScope
+-import com.google.ai.client.generativeai.GenerativeModel
+-import com.google.ai.client.generativeai.type.content
+-import kotlinx.coroutines.Dispatchers
+-import kotlinx.coroutines.flow.MutableStateFlow
+-import kotlinx.coroutines.flow.StateFlow
+-import kotlinx.coroutines.flow.asStateFlow
+-import kotlinx.coroutines.launch
+-
+-class WordModel : ViewModel() {
+-    private val _uiState = MutableStateFlow<UiState>(UiState.Initial)
+-    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+-
+-    private val generativeModel = GenerativeModel(
+-        modelName = "gemini-1.5-pro",
+-        apiKey = BuildConfig.apiKey
+-    )
+-
+-    init {
+-        // Initialize with a prompt to generate the first word
+-        sendPrompt(null, "For kids, generate a word for a spelling bee without definition")
+-    }
+-
+-    fun sendPrompt(bitmap: Bitmap?, prompt: String) {
+-        _uiState.value = UiState.Loading
+-
+-        viewModelScope.launch(Dispatchers.IO) {
+-            try {
+-                val response = generativeModel.generateContent(
+-                    content {
+-                        if (bitmap != null) {
+-                            image(bitmap)
+-                        }
+-                        text(prompt)
+-                    }
+-                )
+-                response.text?.let { outputContent ->
+-                    _uiState.value = UiState.Success(outputContent)
+-                }
+-            } catch (e: Exception) {
+-                _uiState.value = UiState.Error(e.localizedMessage ?: "")
+-            }
+-        }
+-    }
+-
+-    suspend fun getDefinition(word: String): String {
+-        return try {
+-            // Send a prompt to the API to get the definition of the word
+-            val response = generativeModel.generateContent(
+-                content {
+-                    text("Provide a simple definition for the word: $word")
+-                }
+-            )
+-            response.text ?: "No definition found"
+-        } catch (e: Exception) {
+-            "Error fetching definition: ${e.localizedMessage}"
+-        }
+-    }
+-}
+Index: ../Khanatang/app/src/main/res/drawable/ic_upload.xml
+===================================================================
+diff --git a/../Khanatang/app/src/main/res/drawable/ic_upload.xml b/../Khanatang/app/src/main/res/drawable/ic_upload.xml
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/res/drawable/ic_upload.xml	
++++ /dev/null	
+@@ -1,5 +0,0 @@
+-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:tint="#000000" android:viewportHeight="24" android:viewportWidth="24" android:width="24dp">
+-      
+-    <path android:fillColor="@android:color/white" android:pathData="M20,6h-8l-2,-2L4,4c-1.1,0 -1.99,0.9 -1.99,2L2,18c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2L22,8c0,-1.1 -0.9,-2 -2,-2zM20,18L4,18L4,8h16v10zM8,13.01l1.41,1.41L11,12.84L11,17h2v-4.16l1.59,1.59L16,13.01 12.01,9 8,13.01z"/>
+-    
+-</vector>
+Index: ../Khanatang/app/src/main/res/layout/activity_story_screen.xml
+===================================================================
+diff --git a/../Khanatang/app/src/main/res/layout/activity_story_screen.xml b/../Khanatang/app/src/main/res/layout/activity_story_screen.xml
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/res/layout/activity_story_screen.xml	
++++ /dev/null	
+@@ -1,6 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:layout_width="match_parent"
+-    android:layout_height="match_parent">
+-
+-</LinearLayout>
+\ No newline at end of file
+Index: ../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/KidsStoryDetail.kt
+===================================================================
+diff --git a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/KidsStoryDetail.kt b/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/KidsStoryDetail.kt
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/KidsStoryDetail.kt	
++++ /dev/null	
+@@ -1,150 +0,0 @@
+-package com.lyngdoh.khanatang
+-
+-import android.speech.tts.TextToSpeech
+-import androidx.compose.foundation.background
+-import androidx.compose.foundation.layout.*
+-import androidx.compose.foundation.rememberScrollState
+-import androidx.compose.foundation.verticalScroll
+-import androidx.compose.material3.*
+-import androidx.compose.runtime.*
+-import androidx.compose.runtime.saveable.rememberSaveable
+-import androidx.compose.runtime.setValue
+-import androidx.compose.ui.Alignment
+-import androidx.compose.ui.Modifier
+-import androidx.compose.ui.graphics.Color
+-import androidx.compose.ui.platform.LocalContext
+-import androidx.compose.ui.res.painterResource
+-import androidx.compose.ui.text.font.FontWeight
+-import androidx.compose.ui.text.style.TextAlign
+-import androidx.compose.ui.unit.dp
+-import androidx.compose.ui.unit.sp
+-import androidx.lifecycle.viewmodel.compose.viewModel
+-import androidx.navigation.NavController
+-import java.util.Locale
+-
+-@Composable
+-fun KidsStoryDetail(
+-    navController: NavController,
+-    storyTitle: String,
+-    storyModel: StoryModel = viewModel()
+-) {
+-    var result by rememberSaveable { mutableStateOf("") }
+-    val uiState by storyModel.uiState.collectAsState()
+-    val context = LocalContext.current
+-    var tts: TextToSpeech? by remember { mutableStateOf(null) }
+-
+-    LaunchedEffect(Unit) {
+-        storyModel.sendPrompt(null, "Using simple words only, generate a story with a lesson at the end for kids about $storyTitle")
+-        tts = TextToSpeech(context) {
+-            if (it == TextToSpeech.SUCCESS) {
+-                tts?.language = Locale.US
+-            }
+-        }
+-    }
+-
+-    DisposableEffect(Unit) {
+-        onDispose {
+-            tts?.shutdown()
+-        }
+-    }
+-
+-    Box(
+-        modifier = Modifier
+-            .fillMaxSize()
+-            .background(color = Color(0xFFFFF9C4)) // Light yellow background
+-    ) {
+-        Column(
+-            modifier = Modifier
+-                .fillMaxSize()
+-                .padding(16.dp)
+-        ) {
+-            Text(
+-                text = storyTitle,
+-                style = MaterialTheme.typography.titleLarge.copy(
+-                    fontSize = 24.sp,
+-                    fontWeight = FontWeight.Bold,
+-                    color = Color(0xFFEF6C00) // Deep orange color
+-                ),
+-                modifier = Modifier
+-                    .padding(bottom = 16.dp)
+-                    .fillMaxWidth(),
+-                textAlign = TextAlign.Center
+-            )
+-
+-            if (uiState is UiState.Loading) {
+-                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+-            } else {
+-                var textColor = MaterialTheme.colorScheme.onSurface
+-                if (uiState is UiState.Error) {
+-                    textColor = MaterialTheme.colorScheme.error
+-                    result = (uiState as UiState.Error).errorMessage
+-                } else if (uiState is UiState.Success) {
+-                    textColor = MaterialTheme.colorScheme.onSurface
+-                    result = (uiState as UiState.Success).outputText
+-                }
+-                val scrollState = rememberScrollState()
+-                Box(
+-                    modifier = Modifier
+-                        .fillMaxWidth()
+-                        .weight(1f)
+-                        .background(color = Color.White, shape = MaterialTheme.shapes.medium)
+-                        .padding(16.dp)
+-                        .verticalScroll(scrollState)
+-                ) {
+-                    Text(
+-                        text = result,
+-                        textAlign = TextAlign.Start,
+-                        color = textColor,
+-                        fontSize = 18.sp,
+-                    )
+-                }
+-            }
+-        }
+-
+-        Row(
+-            modifier = Modifier
+-                .align(Alignment.BottomCenter)
+-                .fillMaxWidth()
+-                .padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
+-            horizontalArrangement = Arrangement.SpaceAround
+-        ) {
+-            Button(
+-                onClick = { navController.popBackStack() },
+-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)), // Light blue
+-                modifier = Modifier.weight(1f)
+-            ) {
+-                Icon(
+-                    painter = painterResource(id = R.drawable.ic_back),
+-                    contentDescription = "Back",
+-                    tint = Color.White
+-                )
+-                Text(
+-                    text = "Back",
+-                    color = Color.White,
+-                    modifier = Modifier.padding(start = 4.dp)
+-                )
+-            }
+-
+-            Spacer(modifier = Modifier.width(8.dp))
+-
+-            Button(
+-                onClick = {
+-                    tts?.speak(result, TextToSpeech.QUEUE_FLUSH, null, null)
+-                },
+-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81C784)), // Light green
+-                modifier = Modifier.weight(1f)
+-            ) {
+-                Icon(
+-                    painter = painterResource(id = R.drawable.ic_speaker),
+-                    contentDescription = "Read Aloud",
+-                    tint = Color.White
+-                )
+-                Text(
+-                    text = "Read Aloud",
+-                    color = Color.White,
+-                    modifier = Modifier.padding(start = 4.dp)
+-                )
+-            }
+-        }
+-    }
+-}
+Index: ../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/HomeScreen.kt
+===================================================================
+diff --git a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/HomeScreen.kt b/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/HomeScreen.kt
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/HomeScreen.kt	
++++ /dev/null	
+@@ -1,169 +0,0 @@
+-
+-import androidx.compose.foundation.Image
+-import androidx.compose.foundation.background
+-import androidx.compose.foundation.clickable
+-import androidx.compose.foundation.layout.Box
+-import androidx.compose.foundation.layout.Column
+-import androidx.compose.foundation.layout.Row
+-import androidx.compose.foundation.layout.Spacer
+-import androidx.compose.foundation.layout.fillMaxSize
+-import androidx.compose.foundation.layout.fillMaxWidth
+-import androidx.compose.foundation.layout.height
+-import androidx.compose.foundation.layout.padding
+-import androidx.compose.foundation.layout.size
+-import androidx.compose.foundation.layout.width
+-import androidx.compose.foundation.shape.CircleShape
+-import androidx.compose.foundation.shape.RoundedCornerShape
+-import androidx.compose.material3.Card
+-import androidx.compose.material3.CardDefaults
+-import androidx.compose.material3.DropdownMenu
+-import androidx.compose.material3.DropdownMenuItem
+-import androidx.compose.material3.Icon
+-import androidx.compose.material3.IconButton
+-import androidx.compose.material3.MaterialTheme
+-import androidx.compose.material3.Text
+-import androidx.compose.runtime.Composable
+-import androidx.compose.runtime.getValue
+-import androidx.compose.runtime.mutableStateOf
+-import androidx.compose.runtime.remember
+-import androidx.compose.runtime.setValue
+-import androidx.compose.ui.Alignment
+-import androidx.compose.ui.Modifier
+-import androidx.compose.ui.graphics.Color
+-import androidx.compose.ui.layout.ContentScale
+-import androidx.compose.ui.res.painterResource
+-import androidx.compose.ui.unit.dp
+-import androidx.navigation.NavController
+-import com.lyngdoh.khanatang.R
+-
+-@Composable
+-fun HomeScreen(navController: NavController) {
+-    var showMenu by remember { mutableStateOf(false) }
+-
+-    Box(
+-        modifier = Modifier
+-            .fillMaxSize()
+-            .background(Color(0xFFFFF176))
+-    ) {
+-        Column(
+-            modifier = Modifier
+-                .fillMaxSize()
+-                .padding(16.dp)
+-        ) {
+-            Row(
+-                verticalAlignment = Alignment.CenterVertically,
+-                modifier = Modifier.fillMaxWidth()
+-            ) {
+-                Text(
+-                    text = "CuriousKids",
+-                    style = MaterialTheme.typography.headlineMedium.copy(color = Color(0xFF1976D2)),
+-                    modifier = Modifier.weight(1f)
+-                )
+-                Box {
+-                    IconButton(
+-                        onClick = { showMenu = !showMenu },
+-                        modifier = Modifier
+-                            .size(50.dp)
+-                            .background(Color(0xFFFFF176), shape = CircleShape)
+-                    ) {
+-                        Icon(
+-                            painter = painterResource(R.drawable.ic_menu),
+-                            contentDescription = "Menu",
+-                            tint = Color.Black
+-                        )
+-                    }
+-                    DropdownMenu(
+-                        expanded = showMenu,
+-                        onDismissRequest = { showMenu = false },
+-                        modifier = Modifier.background(Color.White)
+-                    ) {
+-                        DropdownMenuItem(
+-                            text = { Text("Parent Login") },
+-                            onClick = { navController.navigate("parentLogin"); showMenu = false }
+-                        )
+-                        DropdownMenuItem(
+-                            text = { Text("About Us") },
+-                            onClick = { navController.navigate("aboutUs"); showMenu = false }
+-                        )
+-                        DropdownMenuItem(
+-                            text = { Text("Settings") },
+-                            onClick = { navController.navigate("settings"); showMenu = false }
+-                        )
+-                        DropdownMenuItem(
+-                            text = { Text("Sound") },
+-                            onClick = { /* Handle sound toggle */ showMenu = false }
+-                        )
+-                    }
+-                }
+-            }
+-
+-            Spacer(modifier = Modifier.height(24.dp))
+-
+-            // First row of cards
+-            Row(modifier = Modifier.fillMaxWidth()) {
+-                CardItem(
+-                    navController,
+-                    "storyTelling",
+-                    R.drawable.stories,
+-                    Color(0xFFFFF176),
+-                    Modifier.weight(1f)
+-                )
+-                Spacer(modifier = Modifier.width(16.dp))
+-                CardItem(
+-                    navController,
+-                    "mathGames",
+-                    R.drawable.maths,
+-                    Color(0xFFFFF176),
+-                    Modifier.weight(1f)
+-                )
+-            }
+-
+-            Spacer(modifier = Modifier.height(16.dp))
+-
+-            // Second row of cards
+-            Row(modifier = Modifier.fillMaxWidth()) {
+-                CardItem(
+-                    navController,
+-                    "spellingBeeGame",
+-                    R.drawable.spelling,
+-                    Color(0xFFFFF176),
+-                    Modifier.weight(1f)
+-                )
+-                Spacer(modifier = Modifier.width(16.dp))
+-                CardItem(
+-                    navController,
+-                    "imageIdentification",
+-                    R.drawable.picture_hunt,
+-                    Color(0xFFFFF176),
+-                    Modifier.weight(1f)
+-                )
+-            }
+-        }
+-    }
+-}
+-
+-@Composable
+-fun CardItem(
+-    navController: NavController,
+-    route: String,
+-    imageRes: Int,
+-    backgroundColor: Color,
+-    modifier: Modifier = Modifier
+-) {
+-    Card(
+-        modifier = modifier
+-            .size(200.dp)
+-            .clickable { navController.navigate(route) },
+-        shape = RoundedCornerShape(10.dp),
+-        colors = CardDefaults.cardColors(backgroundColor)
+-    ) {
+-        Box {
+-            Image(
+-                painter = painterResource(id = imageRes),
+-                contentDescription = null,
+-                contentScale = ContentScale.Fit,
+-                modifier = Modifier.fillMaxSize()
+-            )
+-        }
+-    }
+-}
+Index: ../Khanatang/.idea/compiler.xml
+===================================================================
+diff --git a/../Khanatang/.idea/compiler.xml b/../Khanatang/.idea/compiler.xml
+deleted file mode 100644
+--- a/../Khanatang/.idea/compiler.xml	
++++ /dev/null	
+@@ -1,6 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<project version="4">
+-  <component name="CompilerConfiguration">
+-    <bytecodeTargetLevel target="17" />
+-  </component>
+-</project>
+\ No newline at end of file
+Index: ../Khanatang/.idea/inspectionProfiles/Project_Default.xml
+===================================================================
+diff --git a/../Khanatang/.idea/inspectionProfiles/Project_Default.xml b/../Khanatang/.idea/inspectionProfiles/Project_Default.xml
+deleted file mode 100644
+--- a/../Khanatang/.idea/inspectionProfiles/Project_Default.xml	
++++ /dev/null	
+@@ -1,32 +0,0 @@
+-<component name="InspectionProjectProfileManager">
+-  <profile version="1.0">
+-    <option name="myName" value="Project Default" />
+-    <inspection_tool class="PreviewAnnotationInFunctionWithParameters" enabled="true" level="ERROR" enabled_by_default="true">
+-      <option name="composableFile" value="true" />
+-    </inspection_tool>
+-    <inspection_tool class="PreviewApiLevelMustBeValid" enabled="true" level="ERROR" enabled_by_default="true">
+-      <option name="composableFile" value="true" />
+-    </inspection_tool>
+-    <inspection_tool class="PreviewDimensionRespectsLimit" enabled="true" level="WARNING" enabled_by_default="true">
+-      <option name="composableFile" value="true" />
+-    </inspection_tool>
+-    <inspection_tool class="PreviewFontScaleMustBeGreaterThanZero" enabled="true" level="ERROR" enabled_by_default="true">
+-      <option name="composableFile" value="true" />
+-    </inspection_tool>
+-    <inspection_tool class="PreviewMultipleParameterProviders" enabled="true" level="ERROR" enabled_by_default="true">
+-      <option name="composableFile" value="true" />
+-    </inspection_tool>
+-    <inspection_tool class="PreviewMustBeTopLevelFunction" enabled="true" level="ERROR" enabled_by_default="true">
+-      <option name="composableFile" value="true" />
+-    </inspection_tool>
+-    <inspection_tool class="PreviewNeedsComposableAnnotation" enabled="true" level="ERROR" enabled_by_default="true">
+-      <option name="composableFile" value="true" />
+-    </inspection_tool>
+-    <inspection_tool class="PreviewNotSupportedInUnitTestFiles" enabled="true" level="ERROR" enabled_by_default="true">
+-      <option name="composableFile" value="true" />
+-    </inspection_tool>
+-    <inspection_tool class="PreviewPickerAnnotation" enabled="true" level="ERROR" enabled_by_default="true">
+-      <option name="composableFile" value="true" />
+-    </inspection_tool>
+-  </profile>
+-</component>
+\ No newline at end of file
+Index: ../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/AdditionScreen.kt
+===================================================================
+diff --git a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/AdditionScreen.kt b/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/AdditionScreen.kt
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/AdditionScreen.kt	
++++ /dev/null	
+@@ -1,204 +0,0 @@
+-import androidx.compose.foundation.background
+-import androidx.compose.foundation.layout.Arrangement
+-import androidx.compose.foundation.layout.Box
+-import androidx.compose.foundation.layout.Column
+-import androidx.compose.foundation.layout.Row
+-import androidx.compose.foundation.layout.Spacer
+-import androidx.compose.foundation.layout.fillMaxSize
+-import androidx.compose.foundation.layout.fillMaxWidth
+-import androidx.compose.foundation.layout.height
+-import androidx.compose.foundation.layout.padding
+-import androidx.compose.foundation.text.KeyboardOptions
+-import androidx.compose.material3.AlertDialog
+-import androidx.compose.material3.Button
+-import androidx.compose.material3.ButtonDefaults
+-import androidx.compose.material3.CircularProgressIndicator
+-import androidx.compose.material3.MaterialTheme
+-import androidx.compose.material3.OutlinedTextField
+-import androidx.compose.material3.Text
+-import androidx.compose.runtime.Composable
+-import androidx.compose.runtime.LaunchedEffect
+-import androidx.compose.runtime.collectAsState
+-import androidx.compose.runtime.getValue
+-import androidx.compose.runtime.mutableStateOf
+-import androidx.compose.runtime.remember
+-import androidx.compose.runtime.setValue
+-import androidx.compose.ui.Alignment
+-import androidx.compose.ui.Modifier
+-import androidx.compose.ui.graphics.Color
+-import androidx.compose.ui.text.font.FontWeight
+-import androidx.compose.ui.text.input.KeyboardType
+-import androidx.compose.ui.unit.dp
+-import androidx.compose.ui.unit.sp
+-import androidx.lifecycle.viewmodel.compose.viewModel
+-import androidx.navigation.NavController
+-import com.lyngdoh.khanatang.MathModel
+-import com.lyngdoh.khanatang.UiState
+-
+-@Composable
+-fun AdditionScreen(navController: NavController, mathModel: MathModel = viewModel()) {
+-    var score by remember { mutableStateOf(0) }
+-    var userAnswer by remember { mutableStateOf("") }
+-    var showDialog by remember { mutableStateOf(false) }
+-    var dialogTitle by remember { mutableStateOf("") }
+-    var dialogMessage by remember { mutableStateOf("") }
+-    val uiState by mathModel.uiState.collectAsState()
+-
+-    LaunchedEffect(Unit) {
+-        mathModel.sendPrompt(null, "Generate a simple addition question for kids and provide the correct answer.response follows the pattern \"Question: ... Answer: ...\"")
+-    }
+-
+-    Column(
+-        modifier = Modifier
+-            .fillMaxSize()
+-            .background(Color(0xFFFFF176))
+-            .padding(16.dp),
+-        verticalArrangement = Arrangement.spacedBy(16.dp),
+-        horizontalAlignment = Alignment.CenterHorizontally
+-    ) {
+-        Row(
+-            modifier = Modifier
+-                .fillMaxWidth()
+-                .padding(vertical = 8.dp),
+-            verticalAlignment = Alignment.CenterVertically
+-        ) {
+-            Button(
+-                onClick = { navController.popBackStack() },
+-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)),
+-                modifier = Modifier.padding(8.dp)
+-            ) {
+-            Text(text = "Back", color = Color.White)
+-        }
+-
+-            Spacer(modifier = Modifier.weight(1f))
+-
+-            Text(
+-                text = "Score: $score",
+-                style = MaterialTheme.typography.bodyLarge.copy(
+-                    fontWeight = FontWeight.Bold,
+-                    fontSize = 20.sp
+-                ),
+-                color = Color(0xFF0D47A1)
+-            )
+-        }
+-
+-        Spacer(modifier = Modifier.height(16.dp))
+-
+-        Text(
+-            text = "Math Fun: Addition",
+-            style = MaterialTheme.typography.headlineMedium.copy(
+-                fontWeight = FontWeight.Bold,
+-                fontSize = 26.sp
+-            ),
+-            color = Color(0xFF0D47A1)
+-        )
+-
+-        Spacer(modifier = Modifier.height(16.dp))
+-
+-        Box(
+-            modifier = Modifier
+-                .background(Color.White, shape = MaterialTheme.shapes.medium)
+-                .padding(16.dp)
+-        ) {
+-            when (uiState) {
+-                is UiState.Loading -> {
+-                    CircularProgressIndicator()
+-                }
+-                is UiState.Success -> {
+-                    val responseText = (uiState as UiState.Success).outputText
+-
+-                    // Ensure the response contains a valid question and answer format
+-                    val questionRegex = "Question: (.*)".toRegex()
+-                    val answerRegex = "Answer: (\\d+)".toRegex()
+-
+-                    val questionMatch = questionRegex.find(responseText)
+-                    val answerMatch = answerRegex.find(responseText)
+-
+-                    if (questionMatch != null && answerMatch != null) {
+-                        val question = questionMatch.groupValues[1]
+-                        val correctAnswer = answerMatch.groupValues[1].trim()
+-
+-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+-                            Text(
+-                                text = question,
+-                                style = MaterialTheme.typography.headlineMedium.copy(
+-                                    fontWeight = FontWeight.Bold,
+-                                    fontSize = 24.sp
+-                                ),
+-                                color = Color.Black
+-                            )
+-
+-                            Spacer(modifier = Modifier.height(16.dp))
+-
+-                            OutlinedTextField(
+-                                value = userAnswer,
+-                                onValueChange = { newValue ->
+-                                    userAnswer = newValue.filter { it.isDigit() }
+-                                },
+-                                label = { Text("Enter your answer") },
+-                                modifier = Modifier
+-                                    .fillMaxWidth()
+-                                    .padding(vertical = 8.dp),
+-                                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+-                            )
+-
+-                            Button(
+-                                onClick = {
+-                                    if (userAnswer == correctAnswer) {
+-                                        score++
+-                                        dialogTitle = "Correct!"
+-                                        dialogMessage = "Well done! You got it right."
+-                                    } else {
+-                                        dialogTitle = "Incorrect"
+-                                        dialogMessage = "Oops! That's not correct. Please try again."
+-                                    }
+-                                    showDialog = true
+-                                },
+-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)),
+-                                modifier = Modifier
+-                                    .padding(top = 8.dp)
+-                            ) {
+-                                Text(text = "Submit", color = Color.White)
+-                            }
+-                        }
+-                    } else {
+-                        // Handle case where data is incomplete or malformed
+-                        Text(
+-                            text = "Error: Question data is incomplete or malformed.",
+-                            color = Color.Red
+-                        )
+-                    }
+-                }
+-                is UiState.Error -> {
+-                    Text(
+-                        text = "Error: ${(uiState as UiState.Error).errorMessage}",
+-                        color = Color.Red
+-                    )
+-                }
+-
+-                UiState.Initial -> {
+-                    // Optionally handle the initial state if necessary
+-                }
+-            }
+-        }
+-
+-        Spacer(modifier = Modifier.height(16.dp))
+-    }
+-
+-    if (showDialog) {
+-        AlertDialog(
+-            onDismissRequest = { showDialog = false },
+-            title = { Text(text = dialogTitle, fontWeight = FontWeight.Bold) },
+-            text = { Text(text = dialogMessage) },
+-            confirmButton = {
+-                Button(onClick = {
+-                    showDialog = false
+-                    userAnswer = ""
+-                    mathModel.sendPrompt(null, "Generate another simple addition question for kids and provide the correct answer.response follows the pattern \"Question: ... Answer: ...\"")
+-                }) {
+-                    Text(text = "Next Question")
+-                }
+-            }
+-        )
+-    }
+-}
+Index: ../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/SpellingBeeGame.kt
+===================================================================
+diff --git a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/SpellingBeeGame.kt b/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/SpellingBeeGame.kt
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/SpellingBeeGame.kt	
++++ /dev/null	
+@@ -1,222 +0,0 @@
+-package com.lyngdoh.khanatang
+-
+-import android.speech.tts.TextToSpeech
+-import android.util.Log
+-import androidx.compose.foundation.background
+-import androidx.compose.foundation.layout.Arrangement
+-import androidx.compose.foundation.layout.Column
+-import androidx.compose.foundation.layout.Row
+-import androidx.compose.foundation.layout.Spacer
+-import androidx.compose.foundation.layout.fillMaxSize
+-import androidx.compose.foundation.layout.fillMaxWidth
+-import androidx.compose.foundation.layout.height
+-import androidx.compose.foundation.layout.padding
+-import androidx.compose.foundation.layout.wrapContentSize
+-import androidx.compose.material3.Button
+-import androidx.compose.material3.ButtonDefaults
+-import androidx.compose.material3.CircularProgressIndicator
+-import androidx.compose.material3.Icon
+-import androidx.compose.material3.MaterialTheme
+-import androidx.compose.material3.OutlinedTextField
+-import androidx.compose.material3.Text
+-import androidx.compose.runtime.Composable
+-import androidx.compose.runtime.DisposableEffect
+-import androidx.compose.runtime.LaunchedEffect
+-import androidx.compose.runtime.collectAsState
+-import androidx.compose.runtime.getValue
+-import androidx.compose.runtime.mutableStateOf
+-import androidx.compose.runtime.remember
+-import androidx.compose.runtime.rememberCoroutineScope
+-import androidx.compose.runtime.saveable.rememberSaveable
+-import androidx.compose.runtime.setValue
+-import androidx.compose.ui.Alignment
+-import androidx.compose.ui.Modifier
+-import androidx.compose.ui.graphics.Color
+-import androidx.compose.ui.platform.LocalContext
+-import androidx.compose.ui.res.painterResource
+-import androidx.compose.ui.text.font.FontWeight
+-import androidx.compose.ui.text.style.TextAlign
+-import androidx.compose.ui.unit.dp
+-import androidx.compose.ui.unit.sp
+-import androidx.lifecycle.viewmodel.compose.viewModel
+-import androidx.navigation.NavController
+-import kotlinx.coroutines.launch
+-import java.util.Locale
+-@Composable
+-fun SpellingBeeGame(navController: NavController, wordModel: WordModel = viewModel()) {
+-    var inputWord by rememberSaveable { mutableStateOf("") }
+-    var feedbackMessage by rememberSaveable { mutableStateOf("") }
+-    var definition by rememberSaveable { mutableStateOf("") }
+-    val context = LocalContext.current
+-    var tts: TextToSpeech? by remember { mutableStateOf(null) }
+-    val uiState by wordModel.uiState.collectAsState()
+-    val coroutineScope = rememberCoroutineScope()
+-
+-    LaunchedEffect(Unit) {
+-        tts = TextToSpeech(context) {
+-            if (it == TextToSpeech.SUCCESS) {
+-                tts?.language = Locale.US
+-            }
+-        }
+-        wordModel.sendPrompt(null, "For kids, generate a word for a spelling bee without definition")
+-    }
+-
+-    DisposableEffect(Unit) {
+-        onDispose {
+-            tts?.shutdown()
+-        }
+-    }
+-
+-    Column(
+-        modifier = Modifier
+-            .fillMaxSize()
+-            .background(Color(0xFFFFF9C4))
+-            .padding(16.dp),
+-        horizontalAlignment = Alignment.CenterHorizontally,
+-        verticalArrangement = Arrangement.SpaceBetween
+-    ) {
+-        Row(
+-            modifier = Modifier.fillMaxWidth(),
+-            horizontalArrangement = Arrangement.Start
+-        ) {
+-            Button(
+-                onClick = { navController.popBackStack() },
+-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)) // Light blue
+-            ) {
+-                Icon(
+-                    painter = painterResource(id = R.drawable.ic_back),
+-                    contentDescription = "Back",
+-                    tint = Color.White
+-                )
+-                Text(
+-                    text = "Back",
+-                    color = Color.White,
+-                    modifier = Modifier.padding(start = 4.dp)
+-                )
+-            }
+-        }
+-
+-        Text(
+-            text = "Spelling Bee",
+-            style = MaterialTheme.typography.headlineMedium.copy(
+-                fontWeight = FontWeight.Bold,
+-                fontSize = 36.sp,
+-                color = Color(0xFF0D47A1) // Dark blue color
+-            ),
+-            modifier = Modifier.fillMaxWidth(),
+-            textAlign = TextAlign.Center
+-        )
+-
+-        Spacer(modifier = Modifier.height(24.dp))
+-
+-        if (uiState is UiState.Loading) {
+-            CircularProgressIndicator(
+-                modifier = Modifier.align(Alignment.CenterHorizontally)
+-            )
+-        } else {
+-            OutlinedTextField(
+-                value = inputWord,
+-                onValueChange = { inputWord = it },
+-                label = { Text("Spell the word") },
+-                modifier = Modifier
+-                    .fillMaxWidth()
+-                    .wrapContentSize(Alignment.Center)
+-            )
+-
+-            Spacer(modifier = Modifier.height(16.dp))
+-
+-            Button(
+-                onClick = {
+-                    if (uiState is UiState.Success) {
+-                        val currentWord = (uiState as UiState.Success).outputText.trim().replace("**", "")
+-                        if (inputWord.equals(currentWord, ignoreCase = true)) {
+-                            feedbackMessage = "Correct!"
+-                            tts?.speak("Correct!", TextToSpeech.QUEUE_FLUSH, null, null)
+-                            inputWord = ""
+-                            coroutineScope.launch {
+-                                wordModel.sendPrompt(null, "For kids, generate a new word for a spelling bee without definition")
+-                            }
+-                        } else {
+-                            feedbackMessage = "Incorrect. Try again!"
+-                            tts?.speak("Incorrect. Try again.", TextToSpeech.QUEUE_FLUSH, null, null)
+-                        }
+-                    }
+-                },
+-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFAB91)), // Light orange
+-                modifier = Modifier.fillMaxWidth()
+-            ) {
+-                Text(
+-                    text = "Check Spelling",
+-                    color = Color.White,
+-                    modifier = Modifier.padding(4.dp)
+-                )
+-            }
+-
+-            Spacer(modifier = Modifier.height(16.dp))
+-
+-            Row(
+-                modifier = Modifier.fillMaxWidth(),
+-                horizontalArrangement = Arrangement.SpaceAround
+-            ) {
+-                Button(
+-                    onClick = {
+-                        if (tts != null && uiState is UiState.Success) {
+-                            val wordToSpell = (uiState as UiState.Success).outputText.trim().replace("**", "") // Clean word
+-                            Log.d("SpellingBeeGame", "Generated word: $wordToSpell")
+-                            tts?.speak(wordToSpell, TextToSpeech.QUEUE_FLUSH, null, null)
+-                        }
+-                    },
+-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81C784)) // Light green
+-                ) {
+-                    Icon(
+-                        painter = painterResource(id = R.drawable.ic_speaker),
+-                        contentDescription = "Hear Word",
+-                        tint = Color.White
+-                    )
+-                    Text(
+-                        text = "Hear Word",
+-                        color = Color.White,
+-                        modifier = Modifier.padding(start = 4.dp)
+-                    )
+-                }
+-
+-                Button(
+-                    onClick = {
+-                        if (tts != null && uiState is UiState.Success) {
+-                            val currentWord = (uiState as UiState.Success).outputText.trim().replace("**", "")
+-                            coroutineScope.launch {
+-                                definition = wordModel.getDefinition(currentWord)
+-                                tts?.speak(definition, TextToSpeech.QUEUE_FLUSH, null, null)
+-                            }
+-                        }
+-                    },
+-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFAB91)) // Light orange
+-                ) {
+-                    Icon(
+-                        painter = painterResource(id = R.drawable.ic_definition),
+-                        contentDescription = "Definition",
+-                        tint = Color.White
+-                    )
+-                    Text(
+-                        text = "Definition",
+-                        color = Color.White,
+-                        modifier = Modifier.padding(start = 4.dp)
+-                    )
+-                }
+-            }
+-
+-            Spacer(modifier = Modifier.height(16.dp))
+-
+-            Text(
+-                text = feedbackMessage,
+-                style = MaterialTheme.typography.bodyLarge.copy(
+-                    fontWeight = FontWeight.Bold,
+-                    fontSize = 20.sp,
+-                    color = if (feedbackMessage == "Correct!") Color.Green else Color.Red
+-                ),
+-                modifier = Modifier.fillMaxWidth(),
+-                textAlign = TextAlign.Center
+-            )
+-        }
+-    }
+-}
+Index: ../Khanatang/app/google-services.json
+===================================================================
+diff --git a/../Khanatang/app/google-services.json b/../Khanatang/app/google-services.json
+deleted file mode 100644
+--- a/../Khanatang/app/google-services.json	
++++ /dev/null	
+@@ -1,29 +0,0 @@
+-{
+-  "project_info": {
+-    "project_number": "884433255140",
+-    "project_id": "khanatang-1",
+-    "storage_bucket": "khanatang-1.appspot.com"
+-  },
+-  "client": [
+-    {
+-      "client_info": {
+-        "mobilesdk_app_id": "1:884433255140:android:cb837a68050b9931a70af1",
+-        "android_client_info": {
+-          "package_name": "com.lyngdoh.khanatang"
+-        }
+-      },
+-      "oauth_client": [],
+-      "api_key": [
+-        {
+-          "current_key": "AIzaSyBlUPGhqOVnY5szY0Ttz4VT1VRTEjSgkiU"
+-        }
+-      ],
+-      "services": {
+-        "appinvite_service": {
+-          "other_platform_oauth_client": []
+-        }
+-      }
+-    }
+-  ],
+-  "configuration_version": "1"
+-}
+\ No newline at end of file
+Index: ../Khanatang/.idea/gradle.xml
+===================================================================
+diff --git a/../Khanatang/.idea/gradle.xml b/../Khanatang/.idea/gradle.xml
+deleted file mode 100644
+--- a/../Khanatang/.idea/gradle.xml	
++++ /dev/null	
+@@ -1,19 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<project version="4">
+-  <component name="GradleMigrationSettings" migrationVersion="1" />
+-  <component name="GradleSettings">
+-    <option name="linkedExternalProjectsSettings">
+-      <GradleProjectSettings>
+-        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+-        <option name="gradleJvm" value="#GRADLE_LOCAL_JAVA_HOME" />
+-        <option name="modules">
+-          <set>
+-            <option value="$PROJECT_DIR$" />
+-            <option value="$PROJECT_DIR$/app" />
+-          </set>
+-        </option>
+-        <option name="resolveExternalAnnotations" value="false" />
+-      </GradleProjectSettings>
+-    </option>
+-  </component>
+-</project>
+\ No newline at end of file
+Index: ../Khanatang/.idea/appInsightsSettings.xml
+===================================================================
+diff --git a/../Khanatang/.idea/appInsightsSettings.xml b/../Khanatang/.idea/appInsightsSettings.xml
+deleted file mode 100644
+--- a/../Khanatang/.idea/appInsightsSettings.xml	
++++ /dev/null	
+@@ -1,24 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<project version="4">
+-  <component name="AppInsightsSettings">
+-    <option name="selectedTabId" value="Firebase Crashlytics" />
+-    <option name="tabSettings">
+-      <map>
+-        <entry key="Android Vitals">
+-          <value>
+-            <InsightsFilterSettings>
+-              <option name="connection">
+-                <ConnectionSetting>
+-                  <option name="appId" value="com.lam.videodownloader" />
+-                </ConnectionSetting>
+-              </option>
+-              <option name="signal" value="SIGNAL_UNSPECIFIED" />
+-              <option name="timeIntervalDays" value="SEVEN_DAYS" />
+-              <option name="visibilityType" value="ALL" />
+-            </InsightsFilterSettings>
+-          </value>
+-        </entry>
+-      </map>
+-    </option>
+-  </component>
+-</project>
+\ No newline at end of file
+Index: ../Khanatang/.idea/.gitignore
+===================================================================
+diff --git a/../Khanatang/.idea/.gitignore b/../Khanatang/.idea/.gitignore
+deleted file mode 100644
+--- a/../Khanatang/.idea/.gitignore	
++++ /dev/null	
+@@ -1,3 +0,0 @@
+-# Default ignored files
+-/shelf/
+-/workspace.xml
+Index: ../Khanatang/app/src/main/res/drawable/ic_back.xml
+===================================================================
+diff --git a/../Khanatang/app/src/main/res/drawable/ic_back.xml b/../Khanatang/app/src/main/res/drawable/ic_back.xml
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/res/drawable/ic_back.xml	
++++ /dev/null	
+@@ -1,5 +0,0 @@
+-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:tint="#000000" android:viewportHeight="24" android:viewportWidth="24" android:width="24dp">
+-      
+-    <path android:fillColor="@android:color/white" android:pathData="M17.77,3.77l-1.77,-1.77l-10,10l10,10l1.77,-1.77l-8.23,-8.23z"/>
+-    
+-</vector>
+Index: ../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/MultiplicationScreen.kt
+===================================================================
+diff --git a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/MultiplicationScreen.kt b/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/MultiplicationScreen.kt
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/MultiplicationScreen.kt	
++++ /dev/null	
+@@ -1,204 +0,0 @@
+-import androidx.compose.foundation.background
+-import androidx.compose.foundation.layout.Arrangement
+-import androidx.compose.foundation.layout.Box
+-import androidx.compose.foundation.layout.Column
+-import androidx.compose.foundation.layout.Row
+-import androidx.compose.foundation.layout.Spacer
+-import androidx.compose.foundation.layout.fillMaxSize
+-import androidx.compose.foundation.layout.fillMaxWidth
+-import androidx.compose.foundation.layout.height
+-import androidx.compose.foundation.layout.padding
+-import androidx.compose.foundation.text.KeyboardOptions
+-import androidx.compose.material3.AlertDialog
+-import androidx.compose.material3.Button
+-import androidx.compose.material3.ButtonDefaults
+-import androidx.compose.material3.CircularProgressIndicator
+-import androidx.compose.material3.MaterialTheme
+-import androidx.compose.material3.OutlinedTextField
+-import androidx.compose.material3.Text
+-import androidx.compose.runtime.Composable
+-import androidx.compose.runtime.LaunchedEffect
+-import androidx.compose.runtime.collectAsState
+-import androidx.compose.runtime.getValue
+-import androidx.compose.runtime.mutableStateOf
+-import androidx.compose.runtime.remember
+-import androidx.compose.runtime.setValue
+-import androidx.compose.ui.Alignment
+-import androidx.compose.ui.Modifier
+-import androidx.compose.ui.graphics.Color
+-import androidx.compose.ui.text.font.FontWeight
+-import androidx.compose.ui.text.input.KeyboardType
+-import androidx.compose.ui.unit.dp
+-import androidx.compose.ui.unit.sp
+-import androidx.lifecycle.viewmodel.compose.viewModel
+-import androidx.navigation.NavController
+-import com.lyngdoh.khanatang.MathModel
+-import com.lyngdoh.khanatang.UiState
+-
+-@Composable
+-fun MultiplicationScreen(navController: NavController, mathModel: MathModel = viewModel()) {
+-    var score by remember { mutableStateOf(0) }
+-    var userAnswer by remember { mutableStateOf("") }
+-    var showDialog by remember { mutableStateOf(false) }
+-    var dialogTitle by remember { mutableStateOf("") }
+-    var dialogMessage by remember { mutableStateOf("") }
+-    val uiState by mathModel.uiState.collectAsState()
+-
+-    LaunchedEffect(Unit) {
+-        mathModel.sendPrompt(null, "Generate a simple multiplication question for kids and provide the correct answer.response follows the pattern \"Question: ... Answer: ...\"")
+-    }
+-
+-    Column(
+-        modifier = Modifier
+-            .fillMaxSize()
+-            .background(Color(0xFFFFF176))
+-            .padding(16.dp),
+-        verticalArrangement = Arrangement.spacedBy(16.dp),
+-        horizontalAlignment = Alignment.CenterHorizontally
+-    ) {
+-        Row(
+-            modifier = Modifier
+-                .fillMaxWidth()
+-                .padding(vertical = 8.dp),
+-            verticalAlignment = Alignment.CenterVertically
+-        ) {
+-            Button(
+-                onClick = { navController.popBackStack() },
+-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)),
+-                modifier = Modifier.padding(8.dp)
+-            ) {
+-                Text(text = "Back", color = Color.White)
+-            }
+-
+-            Spacer(modifier = Modifier.weight(1f))
+-
+-            Text(
+-                text = "Score: $score",
+-                style = MaterialTheme.typography.bodyLarge.copy(
+-                    fontWeight = FontWeight.Bold,
+-                    fontSize = 20.sp
+-                ),
+-                color = Color(0xFF0D47A1)
+-            )
+-        }
+-
+-        Spacer(modifier = Modifier.height(16.dp))
+-
+-        Text(
+-            text = "Math Fun: Multiplication",
+-            style = MaterialTheme.typography.headlineMedium.copy(
+-                fontWeight = FontWeight.Bold,
+-                fontSize = 26.sp
+-            ),
+-            color = Color(0xFF0D47A1)
+-        )
+-
+-        Spacer(modifier = Modifier.height(16.dp))
+-
+-        Box(
+-            modifier = Modifier
+-                .background(Color.White, shape = MaterialTheme.shapes.medium)
+-                .padding(16.dp)
+-        ) {
+-            when (uiState) {
+-                is UiState.Loading -> {
+-                    CircularProgressIndicator()
+-                }
+-                is UiState.Success -> {
+-                    val responseText = (uiState as UiState.Success).outputText
+-
+-                    // Ensure the response contains a valid question and answer format
+-                    val questionRegex = "Question: (.*)".toRegex()
+-                    val answerRegex = "Answer: (\\d+)".toRegex()
+-
+-                    val questionMatch = questionRegex.find(responseText)
+-                    val answerMatch = answerRegex.find(responseText)
+-
+-                    if (questionMatch != null && answerMatch != null) {
+-                        val question = questionMatch.groupValues[1]
+-                        val correctAnswer = answerMatch.groupValues[1].trim()
+-
+-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+-                            Text(
+-                                text = question,
+-                                style = MaterialTheme.typography.headlineMedium.copy(
+-                                    fontWeight = FontWeight.Bold,
+-                                    fontSize = 24.sp
+-                                ),
+-                                color = Color.Black
+-                            )
+-
+-                            Spacer(modifier = Modifier.height(16.dp))
+-
+-                            OutlinedTextField(
+-                                value = userAnswer,
+-                                onValueChange = { newValue ->
+-                                    userAnswer = newValue.filter { it.isDigit() }
+-                                },
+-                                label = { Text("Enter your answer") },
+-                                modifier = Modifier
+-                                    .fillMaxWidth()
+-                                    .padding(vertical = 8.dp),
+-                                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+-                            )
+-
+-                            Button(
+-                                onClick = {
+-                                    if (userAnswer == correctAnswer) {
+-                                        score++
+-                                        dialogTitle = "Correct!"
+-                                        dialogMessage = "Well done! You got it right."
+-                                    } else {
+-                                        dialogTitle = "Incorrect"
+-                                        dialogMessage = "Oops! That's not correct. Please try again."
+-                                    }
+-                                    showDialog = true
+-                                },
+-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)),
+-                                modifier = Modifier
+-                                    .padding(top = 8.dp)
+-                            ) {
+-                                Text(text = "Submit", color = Color.White)
+-                            }
+-                        }
+-                    } else {
+-                        // Handle case where data is incomplete or malformed
+-                        Text(
+-                            text = "Error: Question data is incomplete or malformed.",
+-                            color = Color.Red
+-                        )
+-                    }
+-                }
+-                is UiState.Error -> {
+-                    Text(
+-                        text = "Error: ${(uiState as UiState.Error).errorMessage}",
+-                        color = Color.Red
+-                    )
+-                }
+-
+-                UiState.Initial -> {
+-                    // Optionally handle the initial state if necessary
+-                }
+-            }
+-        }
+-
+-        Spacer(modifier = Modifier.height(16.dp))
+-    }
+-
+-    if (showDialog) {
+-        AlertDialog(
+-            onDismissRequest = { showDialog = false },
+-            title = { Text(text = dialogTitle, fontWeight = FontWeight.Bold) },
+-            text = { Text(text = dialogMessage) },
+-            confirmButton = {
+-                Button(onClick = {
+-                    showDialog = false
+-                    userAnswer = ""
+-                    mathModel.sendPrompt(null, "Generate another simple multiplication question for kids and provide the correct answer.response follows the pattern \"Question: ... Answer: ...\"")
+-                }) {
+-                    Text(text = "Next Question")
+-                }
+-            }
+-        )
+-    }
+-}
+Index: ../Khanatang/.idea/misc.xml
+===================================================================
+diff --git a/../Khanatang/.idea/misc.xml b/../Khanatang/.idea/misc.xml
+deleted file mode 100644
+--- a/../Khanatang/.idea/misc.xml	
++++ /dev/null	
+@@ -1,10 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<project version="4">
+-  <component name="ExternalStorageConfigurationManager" enabled="true" />
+-  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="jbr-17" project-jdk-type="JavaSDK">
+-    <output url="file://$PROJECT_DIR$/build/classes" />
+-  </component>
+-  <component name="ProjectType">
+-    <option name="id" value="Android" />
+-  </component>
+-</project>
+\ No newline at end of file
+Index: ../Khanatang/app/src/main/res/drawable/ic_definition.xml
+===================================================================
+diff --git a/../Khanatang/app/src/main/res/drawable/ic_definition.xml b/../Khanatang/app/src/main/res/drawable/ic_definition.xml
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/res/drawable/ic_definition.xml	
++++ /dev/null	
+@@ -1,11 +0,0 @@
+-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:autoMirrored="true" android:height="24dp" android:tint="#000000" android:viewportHeight="24" android:viewportWidth="24" android:width="24dp">
+-      
+-    <path android:fillColor="@android:color/white" android:pathData="M21,5c-1.11,-0.35 -2.33,-0.5 -3.5,-0.5c-1.95,0 -4.05,0.4 -5.5,1.5c-1.45,-1.1 -3.55,-1.5 -5.5,-1.5S2.45,4.9 1,6v14.65c0,0.25 0.25,0.5 0.5,0.5c0.1,0 0.15,-0.05 0.25,-0.05C3.1,20.45 5.05,20 6.5,20c1.95,0 4.05,0.4 5.5,1.5c1.35,-0.85 3.8,-1.5 5.5,-1.5c1.65,0 3.35,0.3 4.75,1.05c0.1,0.05 0.15,0.05 0.25,0.05c0.25,0 0.5,-0.25 0.5,-0.5V6C22.4,5.55 21.75,5.25 21,5zM21,18.5c-1.1,-0.35 -2.3,-0.5 -3.5,-0.5c-1.7,0 -4.15,0.65 -5.5,1.5V8c1.35,-0.85 3.8,-1.5 5.5,-1.5c1.2,0 2.4,0.15 3.5,0.5V18.5z"/>
+-      
+-    <path android:fillColor="@android:color/white" android:pathData="M17.5,10.5c0.88,0 1.73,0.09 2.5,0.26V9.24C19.21,9.09 18.36,9 17.5,9c-1.7,0 -3.24,0.29 -4.5,0.83v1.66C14.13,10.85 15.7,10.5 17.5,10.5z"/>
+-      
+-    <path android:fillColor="@android:color/white" android:pathData="M13,12.49v1.66c1.13,-0.64 2.7,-0.99 4.5,-0.99c0.88,0 1.73,0.09 2.5,0.26V11.9c-0.79,-0.15 -1.64,-0.24 -2.5,-0.24C15.8,11.66 14.26,11.96 13,12.49z"/>
+-      
+-    <path android:fillColor="@android:color/white" android:pathData="M17.5,14.33c-1.7,0 -3.24,0.29 -4.5,0.83v1.66c1.13,-0.64 2.7,-0.99 4.5,-0.99c0.88,0 1.73,0.09 2.5,0.26v-1.52C19.21,14.41 18.36,14.33 17.5,14.33z"/>
+-    
+-</vector>
+Index: ../Khanatang/app/src/main/res/drawable/ic_new_camera.xml
+===================================================================
+diff --git a/../Khanatang/app/src/main/res/drawable/ic_new_camera.xml b/../Khanatang/app/src/main/res/drawable/ic_new_camera.xml
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/res/drawable/ic_new_camera.xml	
++++ /dev/null	
+@@ -1,5 +0,0 @@
+-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:tint="#000000" android:viewportHeight="24" android:viewportWidth="24" android:width="24dp">
+-      
+-    <path android:fillColor="@android:color/white" android:pathData="M3,4V1h2v3h3v2H5v3H3V6H0V4H3zM6,10V7h3V4h7l1.83,2H21c1.1,0 2,0.9 2,2v12c0,1.1 -0.9,2 -2,2H5c-1.1,0 -2,-0.9 -2,-2V10H6zM13,19c2.76,0 5,-2.24 5,-5s-2.24,-5 -5,-5s-5,2.24 -5,5S10.24,19 13,19zM9.8,14c0,1.77 1.43,3.2 3.2,3.2s3.2,-1.43 3.2,-3.2s-1.43,-3.2 -3.2,-3.2S9.8,12.23 9.8,14z"/>
+-    
+-</vector>
+Index: ../Khanatang/.idea/migrations.xml
+===================================================================
+diff --git a/../Khanatang/.idea/migrations.xml b/../Khanatang/.idea/migrations.xml
+deleted file mode 100644
+--- a/../Khanatang/.idea/migrations.xml	
++++ /dev/null	
+@@ -1,10 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<project version="4">
+-  <component name="ProjectMigrations">
+-    <option name="MigrateToGradleLocalJavaHome">
+-      <set>
+-        <option value="$PROJECT_DIR$" />
+-      </set>
+-    </option>
+-  </component>
+-</project>
+\ No newline at end of file
+Index: ../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/KidsStoriesScreen.kt
+===================================================================
+diff --git a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/KidsStoriesScreen.kt b/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/KidsStoriesScreen.kt
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/KidsStoriesScreen.kt	
++++ /dev/null	
+@@ -1,221 +0,0 @@
+-package com.lyngdoh.khanatang
+-
+-import android.content.Context
+-import android.content.Intent
+-import android.speech.RecognizerIntent
+-import androidx.activity.compose.rememberLauncherForActivityResult
+-import androidx.activity.result.contract.ActivityResultContracts
+-import androidx.compose.foundation.Image
+-import androidx.compose.foundation.background
+-import androidx.compose.foundation.clickable
+-import androidx.compose.foundation.layout.Box
+-import androidx.compose.foundation.layout.Column
+-import androidx.compose.foundation.layout.Row
+-import androidx.compose.foundation.layout.Spacer
+-import androidx.compose.foundation.layout.fillMaxSize
+-import androidx.compose.foundation.layout.fillMaxWidth
+-import androidx.compose.foundation.layout.height
+-import androidx.compose.foundation.layout.padding
+-import androidx.compose.foundation.layout.size
+-import androidx.compose.foundation.layout.width
+-import androidx.compose.foundation.lazy.grid.GridCells
+-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+-import androidx.compose.foundation.lazy.grid.items
+-import androidx.compose.foundation.shape.CircleShape
+-import androidx.compose.foundation.shape.RoundedCornerShape
+-import androidx.compose.material.icons.Icons
+-import androidx.compose.material.icons.filled.Mic
+-import androidx.compose.material3.Button
+-import androidx.compose.material3.ButtonDefaults
+-import androidx.compose.material3.Card
+-import androidx.compose.material3.CardDefaults
+-import androidx.compose.material3.Icon
+-import androidx.compose.material3.IconButton
+-import androidx.compose.material3.MaterialTheme
+-import androidx.compose.material3.OutlinedTextField
+-import androidx.compose.material3.Text
+-import androidx.compose.runtime.Composable
+-import androidx.compose.runtime.getValue
+-import androidx.compose.runtime.mutableStateOf
+-import androidx.compose.runtime.saveable.rememberSaveable
+-import androidx.compose.runtime.setValue
+-import androidx.compose.ui.Alignment
+-import androidx.compose.ui.Modifier
+-import androidx.compose.ui.graphics.Brush
+-import androidx.compose.ui.graphics.Color
+-import androidx.compose.ui.layout.ContentScale
+-import androidx.compose.ui.platform.LocalContext
+-import androidx.compose.ui.res.painterResource
+-import androidx.compose.ui.text.font.FontWeight
+-import androidx.compose.ui.unit.dp
+-import androidx.compose.ui.unit.sp
+-import androidx.navigation.NavController
+-import java.util.Locale
+-
+-// Sample data for the stories
+-data class Story(
+-    val title: String,
+-    val imageResId: Int? = null
+-)
+-
+-val stories = listOf(
+-    Story("Cows and Lion", R.drawable.story4),
+-    Story("Kids and their mother"),
+-    Story("A fox and a deer"),
+-    Story("Pig and a Dog"),
+-    Story("The Enchanted Castle"),
+-)
+-
+-@Composable
+-fun KidsStoriesScreen(navController: NavController) {
+-    var storyTitle by rememberSaveable { mutableStateOf("") }
+-    val context = LocalContext.current
+-    val speechResultLauncher = rememberLauncherForActivityResult(
+-        contract = ActivityResultContracts.StartActivityForResult(),
+-        onResult = { result ->
+-            val spokenText = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+-            if (spokenText != null) {
+-                storyTitle = spokenText
+-            }
+-        }
+-    )
+-
+-    fun startVoiceRecognition(context: Context) {
+-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+-        }
+-        speechResultLauncher.launch(intent)
+-    }
+-
+-    Column(
+-        modifier = Modifier
+-            .fillMaxSize()
+-            .background(Brush.verticalGradient(listOf(Color(0xFFFFF9C4), Color(0xFFFFF176))))
+-            .padding(16.dp),
+-        horizontalAlignment = Alignment.CenterHorizontally
+-    ) {
+-        Row(
+-            modifier = Modifier
+-                .fillMaxWidth()
+-                .padding(bottom = 16.dp),
+-            verticalAlignment = Alignment.CenterVertically
+-        ) {
+-            Button(
+-                onClick = { navController.popBackStack() },
+-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)) // Light blue
+-            ) {
+-                Icon(
+-                    painter = painterResource(id = R.drawable.ic_back),
+-                    contentDescription = "Back",
+-                    tint = Color.White
+-                )
+-                Text(
+-                    text = "Back",
+-                    color = Color.White,
+-                    modifier = Modifier.padding(start = 4.dp)
+-                )
+-            }
+-
+-            Spacer(modifier = Modifier.width(8.dp))
+-
+-            Text(
+-                text = "Stories",
+-                style = MaterialTheme.typography.titleLarge.copy(
+-                    fontSize = 30.sp,
+-                    //fontWeight = FontWeight.Bold,
+-                    color = Color(0xFF1976D2)
+-                ),
+-                modifier = Modifier.padding(all = 5.dp)
+-            )
+-        }
+-
+-        OutlinedTextField(
+-            value = storyTitle,
+-            onValueChange = { storyTitle = it },
+-            label = { Text("Enter story title", color = Color(0xFF1976D2)) },
+-            modifier = Modifier
+-                .fillMaxWidth()
+-                .padding(bottom = 8.dp),
+-            textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFF1976D2))
+-        )
+-
+-        Row(
+-            modifier = Modifier
+-                .fillMaxWidth()
+-                .padding(bottom = 16.dp),
+-            verticalAlignment = Alignment.CenterVertically
+-        ) {
+-            Button(
+-                onClick = {
+-                    navController.navigate("storyDetail/$storyTitle")
+-                },
+-                modifier = Modifier.weight(1f),
+-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
+-            ) {
+-                Text("Generate Story", color = Color.White)
+-            }
+-            Spacer(modifier = Modifier.width(8.dp))
+-            IconButton(
+-                onClick = { startVoiceRecognition(context) },
+-                modifier = Modifier
+-                    .size(48.dp)
+-                    .background(color = Color(0xFF1976D2), shape = CircleShape)
+-            ) {
+-                Icon(
+-                    imageVector = Icons.Default.Mic,
+-                    contentDescription = "Voice Input",
+-                    tint = Color.White
+-                )
+-            }
+-        }
+-
+-        LazyVerticalGrid(
+-            columns = GridCells.Fixed(2),
+-            modifier = Modifier.weight(1f) // Take up the remaining space
+-        ) {
+-            items(stories) { story ->
+-                Card(
+-                    modifier = Modifier
+-                        .padding(8.dp)
+-                        .fillMaxWidth()
+-                        .height(200.dp) // Set the height for the cards
+-                        .clickable {
+-                            navController.navigate("storyDetail/${story.title}")
+-                        },
+-                    shape = RoundedCornerShape(16.dp),
+-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFBBDEFB))
+-                ) {
+-                    Box(
+-                        modifier = Modifier.fillMaxSize()
+-                    ) {
+-                        story.imageResId?.let {
+-                            Image(
+-                                painter = painterResource(it),
+-                                contentDescription = null,
+-                                contentScale = ContentScale.Crop,
+-                                modifier = Modifier.fillMaxSize()
+-                            )
+-                        } ?: Box(
+-                            modifier = Modifier
+-                                .fillMaxSize()
+-                                .background(Color(0xFF1976D2))
+-                        )
+-
+-                        Text(
+-                            text = story.title,
+-                            modifier = Modifier
+-                                .align(Alignment.Center)
+-                                .padding(18.dp),
+-                            style = MaterialTheme.typography.bodyLarge.copy(
+-                                color = Color.White,
+-                                fontWeight = FontWeight.Bold
+-                            ),
+-                            color = Color.White
+-                        )
+-                    }
+-                }
+-            }
+-        }
+-    }
+-}
+Index: ../Khanatang/app/src/main/res/drawable/ic_speaker.xml
+===================================================================
+diff --git a/../Khanatang/app/src/main/res/drawable/ic_speaker.xml b/../Khanatang/app/src/main/res/drawable/ic_speaker.xml
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/res/drawable/ic_speaker.xml	
++++ /dev/null	
+@@ -1,5 +0,0 @@
+-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:tint="#000000" android:viewportHeight="24" android:viewportWidth="24" android:width="24dp">
+-      
+-    <path android:fillColor="@android:color/white" android:pathData="M17,2L7,2c-1.1,0 -2,0.9 -2,2v16c0,1.1 0.9,1.99 2,1.99L17,22c1.1,0 2,-0.9 2,-2L19,4c0,-1.1 -0.9,-2 -2,-2zM12,4c1.1,0 2,0.9 2,2s-0.9,2 -2,2c-1.11,0 -2,-0.9 -2,-2s0.89,-2 2,-2zM12,20c-2.76,0 -5,-2.24 -5,-5s2.24,-5 5,-5 5,2.24 5,5 -2.24,5 -5,5zM12,12c-1.66,0 -3,1.34 -3,3s1.34,3 3,3 3,-1.34 3,-3 -1.34,-3 -3,-3z"/>
+-    
+-</vector>
+Index: ../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/SplashScreen.kt
+===================================================================
+diff --git a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/SplashScreen.kt b/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/SplashScreen.kt
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/SplashScreen.kt	
++++ /dev/null	
+@@ -1,63 +0,0 @@
+-
+-import androidx.compose.foundation.Image
+-import androidx.compose.foundation.layout.Arrangement
+-import androidx.compose.foundation.layout.Column
+-import androidx.compose.foundation.layout.Spacer
+-import androidx.compose.foundation.layout.fillMaxSize
+-import androidx.compose.foundation.layout.height
+-import androidx.compose.foundation.layout.size
+-import androidx.compose.material3.MaterialTheme
+-import androidx.compose.material3.Surface
+-import androidx.compose.material3.Text
+-import androidx.compose.runtime.Composable
+-import androidx.compose.runtime.LaunchedEffect
+-import androidx.compose.ui.Alignment
+-import androidx.compose.ui.Modifier
+-import androidx.compose.ui.graphics.Color
+-import androidx.compose.ui.res.painterResource
+-import androidx.compose.ui.text.font.FontWeight
+-import androidx.compose.ui.unit.dp
+-import androidx.navigation.NavController
+-import com.lyngdoh.khanatang.R
+-import kotlinx.coroutines.delay
+-
+-@Composable
+-fun SplashScreen(navController: NavController) {
+-    LaunchedEffect(key1 = true) {
+-        delay(3000) // Delay for 3 seconds
+-        navController.navigate("home") {
+-            popUpTo("splash") { inclusive = true }
+-        }
+-    }
+-
+-    Surface(
+-        modifier = Modifier.fillMaxSize(),
+-        color = Color(0xFFFFF176)
+-    ) {
+-        Column(
+-            modifier = Modifier.fillMaxSize(),
+-            verticalArrangement = Arrangement.Center,
+-            horizontalAlignment = Alignment.CenterHorizontally
+-        ) {
+-            Image(
+-                painter = painterResource(id = R.drawable.logo),
+-                contentDescription = "App Logo",
+-                modifier = Modifier.size(300.dp)
+-            )
+-            Spacer(modifier = Modifier.height(16.dp))
+-            Text(
+-                text = "CuriousKids",
+-                style = MaterialTheme.typography.headlineLarge,
+-                color = Color.White,
+-                fontWeight = FontWeight.Bold
+-            )
+-            Spacer(modifier = Modifier.height(8.dp))
+-            Text(
+-                text = "Version 1.0.0",
+-                style = MaterialTheme.typography.bodyMedium,
+-                color = Color.White,
+-                modifier = Modifier.align(Alignment.CenterHorizontally)
+-            )
+-        }
+-    }
+-}
+Index: ../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/MathFunMenu.kt
+===================================================================
+diff --git a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/MathFunMenu.kt b/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/MathFunMenu.kt
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/MathFunMenu.kt	
++++ /dev/null	
+@@ -1,120 +0,0 @@
+-import androidx.compose.foundation.Image
+-import androidx.compose.foundation.background
+-import androidx.compose.foundation.clickable
+-import androidx.compose.foundation.layout.*
+-import androidx.compose.foundation.shape.RoundedCornerShape
+-import androidx.compose.material3.Button
+-import androidx.compose.material3.ButtonDefaults
+-import androidx.compose.material3.Icon
+-import androidx.compose.material3.MaterialTheme
+-import androidx.compose.material3.Text
+-import androidx.compose.runtime.Composable
+-import androidx.compose.ui.Alignment
+-import androidx.compose.ui.Modifier
+-import androidx.compose.ui.draw.clip
+-import androidx.compose.ui.graphics.Color
+-import androidx.compose.ui.layout.ContentScale
+-import androidx.compose.ui.res.painterResource
+-import androidx.compose.ui.text.font.FontWeight
+-import androidx.compose.ui.text.style.TextAlign
+-import androidx.compose.ui.unit.dp
+-import androidx.compose.ui.unit.sp
+-import androidx.navigation.NavController
+-import com.lyngdoh.khanatang.R
+-
+-@Composable
+-fun MathFunMenu(navController: NavController) {
+-    Column(
+-        modifier = Modifier
+-            .fillMaxSize()
+-            .background(Color(0xFFFFF176)) // Warmer yellow background
+-            .padding(16.dp)
+-    ) {
+-        Row(
+-            modifier = Modifier.fillMaxWidth(),
+-            verticalAlignment = Alignment.CenterVertically
+-        ) {
+-            Button(
+-                onClick = { navController.popBackStack() },
+-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)) // Light blue
+-            ) {
+-                Icon(
+-                    painter = painterResource(id = R.drawable.ic_back),
+-                    contentDescription = "Back",
+-                    tint = Color.White
+-                )
+-                Text(
+-                    text = "Back",
+-                    color = Color.White,
+-                    modifier = Modifier.padding(start = 4.dp)
+-                )
+-            }
+-            Text(
+-                text = "Math Fun",
+-                style = MaterialTheme.typography.headlineMedium.copy(
+-                    fontWeight = FontWeight.Bold,
+-                    fontSize = 26.sp
+-                ),
+-                color = Color(0xFF0D47A1),
+-                modifier = Modifier.padding(horizontal = 16.dp),
+-                textAlign = TextAlign.Center
+-            )
+-        }
+-
+-        Spacer(modifier = Modifier.height(16.dp))
+-
+-        Column(
+-            modifier = Modifier.fillMaxWidth(),
+-            verticalArrangement = Arrangement.spacedBy(16.dp)
+-        ) {
+-            Row(
+-                modifier = Modifier.fillMaxWidth(),
+-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+-            ) {
+-                ImageCard(
+-                    navController = navController,
+-                    route = "addition",
+-                    imageRes = R.drawable.add,
+-                    modifier = Modifier.weight(1f)
+-                )
+-                ImageCard(
+-                    navController = navController,
+-                    route = "subtraction",
+-                    imageRes = R.drawable.sub,
+-                    modifier = Modifier.weight(1f)
+-                )
+-            }
+-            Row(
+-                modifier = Modifier.fillMaxWidth(),
+-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+-            ) {
+-                ImageCard(
+-                    navController = navController,
+-                    route = "multiplication",
+-                    imageRes = R.drawable.mul,
+-                    modifier = Modifier.weight(1f)
+-                )
+-                ImageCard(
+-                    navController = navController,
+-                    route = "division",
+-                    imageRes = R.drawable.div,
+-                    modifier = Modifier.weight(1f)
+-                )
+-            }
+-        }
+-    }
+-}
+-
+-@Composable
+-fun ImageCard(navController: NavController, route: String, imageRes: Int, modifier: Modifier = Modifier) {
+-    Image(
+-        painter = painterResource(id = imageRes),
+-        contentDescription = null,
+-        contentScale = ContentScale.Crop,
+-        modifier = modifier
+-            .fillMaxWidth()
+-            .aspectRatio(1f)
+-            .clip(RoundedCornerShape(8.dp)) // Rounded corners
+-            .clickable { navController.navigate(route) }
+-    )
+-}
+Index: ../Khanatang/app/src/main/res/drawable/ic_add.xml
+===================================================================
+diff --git a/../Khanatang/app/src/main/res/drawable/ic_add.xml b/../Khanatang/app/src/main/res/drawable/ic_add.xml
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/res/drawable/ic_add.xml	
++++ /dev/null	
+@@ -1,5 +0,0 @@
+-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:tint="#000000" android:viewportHeight="24" android:viewportWidth="24" android:width="24dp">
+-      
+-    <path android:fillColor="@android:color/white" android:pathData="M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+-    
+-</vector>
+Index: ../Khanatang/.idea/kotlinc.xml
+===================================================================
+diff --git a/../Khanatang/.idea/kotlinc.xml b/../Khanatang/.idea/kotlinc.xml
+deleted file mode 100644
+--- a/../Khanatang/.idea/kotlinc.xml	
++++ /dev/null	
+@@ -1,6 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<project version="4">
+-  <component name="KotlinJpsPluginSettings">
+-    <option name="version" value="1.9.0" />
+-  </component>
+-</project>
+\ No newline at end of file
+Index: ../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/ImageModel.kt
+===================================================================
+diff --git a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/ImageModel.kt b/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/ImageModel.kt
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/ImageModel.kt	
++++ /dev/null	
+@@ -1,60 +0,0 @@
+-package com.lyngdoh.khanatang
+-
+-import android.graphics.Bitmap
+-import androidx.lifecycle.ViewModel
+-import androidx.lifecycle.viewModelScope
+-import com.google.ai.client.generativeai.GenerativeModel
+-import com.google.ai.client.generativeai.type.content
+-import kotlinx.coroutines.Dispatchers
+-import kotlinx.coroutines.flow.MutableStateFlow
+-import kotlinx.coroutines.flow.StateFlow
+-import kotlinx.coroutines.flow.asStateFlow
+-import kotlinx.coroutines.launch
+-
+-class ImageModel : ViewModel() {
+-    private val _uiState: MutableStateFlow<UiState> = MutableStateFlow(UiState.Initial)
+-    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+-
+-    private val generativeModel = GenerativeModel(
+-       // modelName = "gemini-pro-vision",
+-        modelName = "gemini-1.5-pro",
+-        apiKey = BuildConfig.apiKey
+-    )
+-
+-    fun sendPrompt(
+-        bitmap: Bitmap?,
+-        prompt: String
+-    ) {
+-        _uiState.value = UiState.Loading
+-
+-        viewModelScope.launch(Dispatchers.IO) {
+-            try {
+-                val response = generativeModel.generateContent(
+-                    content {
+-                        if (bitmap != null) {
+-                            image(bitmap)
+-                        }
+-                        text(prompt)
+-                    }
+-                )
+-                response.text?.let { outputContent ->
+-                    val mainObjectName = extractMainObjectName(outputContent)
+-                    _uiState.value = UiState.Success(mainObjectName)
+-                }
+-            } catch (e: Exception) {
+-                _uiState.value = UiState.Error(e.localizedMessage ?: "Unknown error")
+-            }
+-        }
+-    }
+-
+-    private fun extractMainObjectName(responseText: String): String {
+-        // Extract the main object name from the response text
+-        // This is a simple implementation and might need adjustments based on actual response format
+-        val lines = responseText.lines()
+-        return if (lines.isNotEmpty()) {
+-            lines[0] // Assuming the main object name is on the first line
+-        } else {
+-            "Unknown object"
+-        }
+-    }
+-}
+Index: ../Khanatang/app/src/main/res/drawable/ic_camera.xml
+===================================================================
+diff --git a/../Khanatang/app/src/main/res/drawable/ic_camera.xml b/../Khanatang/app/src/main/res/drawable/ic_camera.xml
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/res/drawable/ic_camera.xml	
++++ /dev/null	
+@@ -1,7 +0,0 @@
+-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:tint="#30A4E1" android:viewportHeight="24" android:viewportWidth="24" android:width="24dp">
+-      
+-    <path android:fillColor="@android:color/white" android:pathData="M12,12m-3.2,0a3.2,3.2 0,1 1,6.4 0a3.2,3.2 0,1 1,-6.4 0"/>
+-      
+-    <path android:fillColor="@android:color/white" android:pathData="M9,2L7.17,4L4,4c-1.1,0 -2,0.9 -2,2v12c0,1.1 0.9,2 2,2h16c1.1,0 2,-0.9 2,-2L22,6c0,-1.1 -0.9,-2 -2,-2h-3.17L15,2L9,2zM12,17c-2.76,0 -5,-2.24 -5,-5s2.24,-5 5,-5 5,2.24 5,5 -2.24,5 -5,5z"/>
+-    
+-</vector>
+Index: ../Khanatang/.idea/deploymentTargetSelector.xml
+===================================================================
+diff --git a/../Khanatang/.idea/deploymentTargetSelector.xml b/../Khanatang/.idea/deploymentTargetSelector.xml
+deleted file mode 100644
+--- a/../Khanatang/.idea/deploymentTargetSelector.xml	
++++ /dev/null	
+@@ -1,18 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<project version="4">
+-  <component name="deploymentTargetSelector">
+-    <selectionStates>
+-      <SelectionState runConfigName="app">
+-        <option name="selectionMode" value="DROPDOWN" />
+-        <DropdownSelection timestamp="2024-06-28T05:32:35.405881Z">
+-          <Target type="DEFAULT_BOOT">
+-            <handle>
+-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\User\.android\avd\Pixel_4_API_28.avd" />
+-            </handle>
+-          </Target>
+-        </DropdownSelection>
+-        <DialogSelection />
+-      </SelectionState>
+-    </selectionStates>
+-  </component>
+-</project>
+\ No newline at end of file
+Index: ../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/DivisionScreen.kt
+===================================================================
+diff --git a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/DivisionScreen.kt b/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/DivisionScreen.kt
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/DivisionScreen.kt	
++++ /dev/null	
+@@ -1,204 +0,0 @@
+-import androidx.compose.foundation.background
+-import androidx.compose.foundation.layout.Arrangement
+-import androidx.compose.foundation.layout.Box
+-import androidx.compose.foundation.layout.Column
+-import androidx.compose.foundation.layout.Row
+-import androidx.compose.foundation.layout.Spacer
+-import androidx.compose.foundation.layout.fillMaxSize
+-import androidx.compose.foundation.layout.fillMaxWidth
+-import androidx.compose.foundation.layout.height
+-import androidx.compose.foundation.layout.padding
+-import androidx.compose.foundation.text.KeyboardOptions
+-import androidx.compose.material3.AlertDialog
+-import androidx.compose.material3.Button
+-import androidx.compose.material3.ButtonDefaults
+-import androidx.compose.material3.CircularProgressIndicator
+-import androidx.compose.material3.MaterialTheme
+-import androidx.compose.material3.OutlinedTextField
+-import androidx.compose.material3.Text
+-import androidx.compose.runtime.Composable
+-import androidx.compose.runtime.LaunchedEffect
+-import androidx.compose.runtime.collectAsState
+-import androidx.compose.runtime.getValue
+-import androidx.compose.runtime.mutableStateOf
+-import androidx.compose.runtime.remember
+-import androidx.compose.runtime.setValue
+-import androidx.compose.ui.Alignment
+-import androidx.compose.ui.Modifier
+-import androidx.compose.ui.graphics.Color
+-import androidx.compose.ui.text.font.FontWeight
+-import androidx.compose.ui.text.input.KeyboardType
+-import androidx.compose.ui.unit.dp
+-import androidx.compose.ui.unit.sp
+-import androidx.lifecycle.viewmodel.compose.viewModel
+-import androidx.navigation.NavController
+-import com.lyngdoh.khanatang.MathModel
+-import com.lyngdoh.khanatang.UiState
+-
+-@Composable
+-fun DivisionScreen(navController: NavController, mathModel: MathModel = viewModel()) {
+-    var score by remember { mutableStateOf(0) }
+-    var userAnswer by remember { mutableStateOf("") }
+-    var showDialog by remember { mutableStateOf(false) }
+-    var dialogTitle by remember { mutableStateOf("") }
+-    var dialogMessage by remember { mutableStateOf("") }
+-    val uiState by mathModel.uiState.collectAsState()
+-
+-    LaunchedEffect(Unit) {
+-        mathModel.sendPrompt(null, "Generate a simple division question for kids and provide the correct answer.response follows the pattern \"Question: ... Answer: ...\"")
+-    }
+-
+-    Column(
+-        modifier = Modifier
+-            .fillMaxSize()
+-            .background(Color(0xFFFFF176))
+-            .padding(16.dp),
+-        verticalArrangement = Arrangement.spacedBy(16.dp),
+-        horizontalAlignment = Alignment.CenterHorizontally
+-    ) {
+-        Row(
+-            modifier = Modifier
+-                .fillMaxWidth()
+-                .padding(vertical = 8.dp),
+-            verticalAlignment = Alignment.CenterVertically
+-        ) {
+-            Button(
+-                onClick = { navController.popBackStack() },
+-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)),
+-                modifier = Modifier.padding(8.dp)
+-            ) {
+-                Text(text = "Back", color = Color.White)
+-            }
+-
+-            Spacer(modifier = Modifier.weight(1f))
+-
+-            Text(
+-                text = "Score: $score",
+-                style = MaterialTheme.typography.bodyLarge.copy(
+-                    fontWeight = FontWeight.Bold,
+-                    fontSize = 20.sp
+-                ),
+-                color = Color(0xFF0D47A1)
+-            )
+-        }
+-
+-        Spacer(modifier = Modifier.height(16.dp))
+-
+-        Text(
+-            text = "Math Fun: Division",
+-            style = MaterialTheme.typography.headlineMedium.copy(
+-                fontWeight = FontWeight.Bold,
+-                fontSize = 26.sp
+-            ),
+-            color = Color(0xFF0D47A1)
+-        )
+-
+-        Spacer(modifier = Modifier.height(16.dp))
+-
+-        Box(
+-            modifier = Modifier
+-                .background(Color.White, shape = MaterialTheme.shapes.medium)
+-                .padding(16.dp)
+-        ) {
+-            when (uiState) {
+-                is UiState.Loading -> {
+-                    CircularProgressIndicator()
+-                }
+-                is UiState.Success -> {
+-                    val responseText = (uiState as UiState.Success).outputText
+-
+-                    // Ensure the response contains a valid question and answer format
+-                    val questionRegex = "Question: (.*)".toRegex()
+-                    val answerRegex = "Answer: (\\d+)".toRegex()
+-
+-                    val questionMatch = questionRegex.find(responseText)
+-                    val answerMatch = answerRegex.find(responseText)
+-
+-                    if (questionMatch != null && answerMatch != null) {
+-                        val question = questionMatch.groupValues[1]
+-                        val correctAnswer = answerMatch.groupValues[1].trim()
+-
+-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+-                            Text(
+-                                text = question,
+-                                style = MaterialTheme.typography.headlineMedium.copy(
+-                                    fontWeight = FontWeight.Bold,
+-                                    fontSize = 24.sp
+-                                ),
+-                                color = Color.Black
+-                            )
+-
+-                            Spacer(modifier = Modifier.height(16.dp))
+-
+-                            OutlinedTextField(
+-                                value = userAnswer,
+-                                onValueChange = { newValue ->
+-                                    userAnswer = newValue.filter { it.isDigit() }
+-                                },
+-                                label = { Text("Enter your answer") },
+-                                modifier = Modifier
+-                                    .fillMaxWidth()
+-                                    .padding(vertical = 8.dp),
+-                                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+-                            )
+-
+-                            Button(
+-                                onClick = {
+-                                    if (userAnswer == correctAnswer) {
+-                                        score++
+-                                        dialogTitle = "Correct!"
+-                                        dialogMessage = "Well done! You got it right."
+-                                    } else {
+-                                        dialogTitle = "Incorrect"
+-                                        dialogMessage = "Oops! That's not correct. Please try again."
+-                                    }
+-                                    showDialog = true
+-                                },
+-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)),
+-                                modifier = Modifier
+-                                    .padding(top = 8.dp)
+-                            ) {
+-                                Text(text = "Submit", color = Color.White)
+-                            }
+-                        }
+-                    } else {
+-                        // Handle case where data is incomplete or malformed
+-                        Text(
+-                            text = "Error: Question data is incomplete or malformed.",
+-                            color = Color.Red
+-                        )
+-                    }
+-                }
+-                is UiState.Error -> {
+-                    Text(
+-                        text = "Error: ${(uiState as UiState.Error).errorMessage}",
+-                        color = Color.Red
+-                    )
+-                }
+-
+-                UiState.Initial -> {
+-                    // Optionally handle the initial state if necessary
+-                }
+-            }
+-        }
+-
+-        Spacer(modifier = Modifier.height(16.dp))
+-    }
+-
+-    if (showDialog) {
+-        AlertDialog(
+-            onDismissRequest = { showDialog = false },
+-            title = { Text(text = dialogTitle, fontWeight = FontWeight.Bold) },
+-            text = { Text(text = dialogMessage) },
+-            confirmButton = {
+-                Button(onClick = {
+-                    showDialog = false
+-                    userAnswer = ""
+-                    mathModel.sendPrompt(null, "Generate another simple division question for kids and provide the correct answer.response follows the pattern \"Question: ... Answer: ...\"")
+-                }) {
+-                    Text(text = "Next Question")
+-                }
+-            }
+-        )
+-    }
+-}
+Index: ../Khanatang/app/src/main/res/drawable/ic_menu.xml
+===================================================================
+diff --git a/../Khanatang/app/src/main/res/drawable/ic_menu.xml b/../Khanatang/app/src/main/res/drawable/ic_menu.xml
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/res/drawable/ic_menu.xml	
++++ /dev/null	
+@@ -1,5 +0,0 @@
+-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:tint="#000000" android:viewportHeight="24" android:viewportWidth="24" android:width="24dp">
+-      
+-    <path android:fillColor="@android:color/white" android:pathData="M3,18h18v-2L3,16v2zM3,13h18v-2L3,11v2zM3,6v2h18L21,6L3,6z"/>
+-    
+-</vector>
+Index: ../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/SubtractionScreen.kt
+===================================================================
+diff --git a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/SubtractionScreen.kt b/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/SubtractionScreen.kt
+deleted file mode 100644
+--- a/../Khanatang/app/src/main/java/com/lyngdoh/curiouskids/SubtractionScreen.kt	
++++ /dev/null	
+@@ -1,204 +0,0 @@
+-import androidx.compose.foundation.background
+-import androidx.compose.foundation.layout.Arrangement
+-import androidx.compose.foundation.layout.Box
+-import androidx.compose.foundation.layout.Column
+-import androidx.compose.foundation.layout.Row
+-import androidx.compose.foundation.layout.Spacer
+-import androidx.compose.foundation.layout.fillMaxSize
+-import androidx.compose.foundation.layout.fillMaxWidth
+-import androidx.compose.foundation.layout.height
+-import androidx.compose.foundation.layout.padding
+-import androidx.compose.foundation.text.KeyboardOptions
+-import androidx.compose.material3.AlertDialog
+-import androidx.compose.material3.Button
+-import androidx.compose.material3.ButtonDefaults
+-import androidx.compose.material3.CircularProgressIndicator
+-import androidx.compose.material3.MaterialTheme
+-import androidx.compose.material3.OutlinedTextField
+-import androidx.compose.material3.Text
+-import androidx.compose.runtime.Composable
+-import androidx.compose.runtime.LaunchedEffect
+-import androidx.compose.runtime.collectAsState
+-import androidx.compose.runtime.getValue
+-import androidx.compose.runtime.mutableStateOf
+-import androidx.compose.runtime.remember
+-import androidx.compose.runtime.setValue
+-import androidx.compose.ui.Alignment
+-import androidx.compose.ui.Modifier
+-import androidx.compose.ui.graphics.Color
+-import androidx.compose.ui.text.font.FontWeight
+-import androidx.compose.ui.text.input.KeyboardType
+-import androidx.compose.ui.unit.dp
+-import androidx.compose.ui.unit.sp
+-import androidx.lifecycle.viewmodel.compose.viewModel
+-import androidx.navigation.NavController
+-import com.lyngdoh.khanatang.MathModel
+-import com.lyngdoh.khanatang.UiState
+-
+-@Composable
+-fun SubtractionScreen(navController: NavController, mathModel: MathModel = viewModel()) {
+-    var score by remember { mutableStateOf(0) }
+-    var userAnswer by remember { mutableStateOf("") }
+-    var showDialog by remember { mutableStateOf(false) }
+-    var dialogTitle by remember { mutableStateOf("") }
+-    var dialogMessage by remember { mutableStateOf("") }
+-    val uiState by mathModel.uiState.collectAsState()
+-
+-    LaunchedEffect(Unit) {
+-        mathModel.sendPrompt(null, "Generate a simple subtraction question for kids and provide the correct answer.response follows the pattern \"Question: ... Answer: ...\"")
+-    }
+-
+-    Column(
+-        modifier = Modifier
+-            .fillMaxSize()
+-            .background(Color(0xFFFFF176))
+-            .padding(16.dp),
+-        verticalArrangement = Arrangement.spacedBy(16.dp),
+-        horizontalAlignment = Alignment.CenterHorizontally
+-    ) {
+-        Row(
+-            modifier = Modifier
+-                .fillMaxWidth()
+-                .padding(vertical = 8.dp),
+-            verticalAlignment = Alignment.CenterVertically
+-        ) {
+-            Button(
+-                onClick = { navController.popBackStack() },
+-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)),
+-                modifier = Modifier.padding(8.dp)
+-            ) {
+-                Text(text = "Back", color = Color.White)
+-            }
+-
+-            Spacer(modifier = Modifier.weight(1f))
+-
+-            Text(
+-                text = "Score: $score",
+-                style = MaterialTheme.typography.bodyLarge.copy(
+-                    fontWeight = FontWeight.Bold,
+-                    fontSize = 20.sp
+-                ),
+-                color = Color(0xFF0D47A1)
+-            )
+-        }
+-
+-        Spacer(modifier = Modifier.height(16.dp))
+-
+-        Text(
+-            text = "Math Fun: Subtraction",
+-            style = MaterialTheme.typography.headlineMedium.copy(
+-                fontWeight = FontWeight.Bold,
+-                fontSize = 26.sp
+-            ),
+-            color = Color(0xFF0D47A1)
+-        )
+-
+-        Spacer(modifier = Modifier.height(16.dp))
+-
+-        Box(
+-            modifier = Modifier
+-                .background(Color.White, shape = MaterialTheme.shapes.medium)
+-                .padding(16.dp)
+-        ) {
+-            when (uiState) {
+-                is UiState.Loading -> {
+-                    CircularProgressIndicator()
+-                }
+-                is UiState.Success -> {
+-                    val responseText = (uiState as UiState.Success).outputText
+-
+-                    // Ensure the response contains a valid question and answer format
+-                    val questionRegex = "Question: (.*)".toRegex()
+-                    val answerRegex = "Answer: (\\d+)".toRegex()
+-
+-                    val questionMatch = questionRegex.find(responseText)
+-                    val answerMatch = answerRegex.find(responseText)
+-
+-                    if (questionMatch != null && answerMatch != null) {
+-                        val question = questionMatch.groupValues[1]
+-                        val correctAnswer = answerMatch.groupValues[1].trim()
+-
+-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+-                            Text(
+-                                text = question,
+-                                style = MaterialTheme.typography.headlineMedium.copy(
+-                                    fontWeight = FontWeight.Bold,
+-                                    fontSize = 24.sp
+-                                ),
+-                                color = Color.Black
+-                            )
+-
+-                            Spacer(modifier = Modifier.height(16.dp))
+-
+-                            OutlinedTextField(
+-                                value = userAnswer,
+-                                onValueChange = { newValue ->
+-                                    userAnswer = newValue.filter { it.isDigit() }
+-                                },
+-                                label = { Text("Enter your answer") },
+-                                modifier = Modifier
+-                                    .fillMaxWidth()
+-                                    .padding(vertical = 8.dp),
+-                                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+-                            )
+-
+-                            Button(
+-                                onClick = {
+-                                    if (userAnswer == correctAnswer) {
+-                                        score++
+-                                        dialogTitle = "Correct!"
+-                                        dialogMessage = "Well done! You got it right."
+-                                    } else {
+-                                        dialogTitle = "Incorrect"
+-                                        dialogMessage = "Oops! That's not correct. Please try again."
+-                                    }
+-                                    showDialog = true
+-                                },
+-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)),
+-                                modifier = Modifier
+-                                    .padding(top = 8.dp)
+-                            ) {
+-                                Text(text = "Submit", color = Color.White)
+-                            }
+-                        }
+-                    } else {
+-                        // Handle case where data is incomplete or malformed
+-                        Text(
+-                            text = "Error: Question data is incomplete or malformed.",
+-                            color = Color.Red
+-                        )
+-                    }
+-                }
+-                is UiState.Error -> {
+-                    Text(
+-                        text = "Error: ${(uiState as UiState.Error).errorMessage}",
+-                        color = Color.Red
+-                    )
+-                }
+-
+-                UiState.Initial -> {
+-                    // Optionally handle the initial state if necessary
+-                }
+-            }
+-        }
+-
+-        Spacer(modifier = Modifier.height(16.dp))
+-    }
+-
+-    if (showDialog) {
+-        AlertDialog(
+-            onDismissRequest = { showDialog = false },
+-            title = { Text(text = dialogTitle, fontWeight = FontWeight.Bold) },
+-            text = { Text(text = dialogMessage) },
+-            confirmButton = {
+-                Button(onClick = {
+-                    showDialog = false
+-                    userAnswer = ""
+-                    mathModel.sendPrompt(null, "Generate another simple subtraction question for kids and provide the correct answer.response follows the pattern \"Question: ... Answer: ...\"")
+-                }) {
+-                    Text(text = "Next Question")
+-                }
+-            }
+-        )
+-    }
+-}
+Index: app/src/main/java/com/lyngdoh/curiouskids/ChattingPage.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.lyngdoh.curiouskids\r\n\r\nclass ChattingPage {\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/lyngdoh/curiouskids/ChattingPage.kt b/app/src/main/java/com/lyngdoh/curiouskids/ChattingPage.kt
+--- a/app/src/main/java/com/lyngdoh/curiouskids/ChattingPage.kt	
++++ b/app/src/main/java/com/lyngdoh/curiouskids/ChattingPage.kt	
+@@ -1,4 +1,248 @@
+-package com.lyngdoh.curiouskids
++import android.content.Context
++import androidx.compose.foundation.Image
++import androidx.compose.foundation.background
++import androidx.compose.foundation.gestures.detectTapGestures
++import androidx.compose.foundation.layout.Arrangement
++import androidx.compose.foundation.layout.Box
++import androidx.compose.foundation.layout.Column
++import androidx.compose.foundation.layout.Row
++import androidx.compose.foundation.layout.Spacer
++import androidx.compose.foundation.layout.fillMaxSize
++import androidx.compose.foundation.layout.fillMaxWidth
++import androidx.compose.foundation.layout.height
++import androidx.compose.foundation.layout.padding
++import androidx.compose.foundation.layout.size
++import androidx.compose.foundation.layout.width
++import androidx.compose.foundation.layout.widthIn
++import androidx.compose.foundation.lazy.LazyColumn
++import androidx.compose.foundation.lazy.items
++import androidx.compose.foundation.shape.CircleShape
++import androidx.compose.foundation.shape.RoundedCornerShape
++import androidx.compose.foundation.text.BasicTextField
++import androidx.compose.material3.Button
++import androidx.compose.material3.ButtonDefaults
++import androidx.compose.material3.Icon
++import androidx.compose.material3.MaterialTheme
++import androidx.compose.material3.Text
++import androidx.compose.runtime.Composable
++import androidx.compose.runtime.LaunchedEffect
++import androidx.compose.runtime.collectAsState
++import androidx.compose.runtime.getValue
++import androidx.compose.runtime.mutableStateListOf
++import androidx.compose.runtime.mutableStateOf
++import androidx.compose.runtime.remember
++import androidx.compose.runtime.rememberCoroutineScope
++import androidx.compose.runtime.saveable.rememberSaveable
++import androidx.compose.runtime.setValue
++import androidx.compose.ui.Alignment
++import androidx.compose.ui.ExperimentalComposeUiApi
++import androidx.compose.ui.Modifier
++import androidx.compose.ui.graphics.Color
++import androidx.compose.ui.input.pointer.pointerInput
++import androidx.compose.ui.layout.ContentScale
++import androidx.compose.ui.platform.LocalContext
++import androidx.compose.ui.platform.LocalSoftwareKeyboardController
++import androidx.compose.ui.res.painterResource
++import androidx.compose.ui.text.font.FontWeight
++import androidx.compose.ui.text.style.TextAlign
++import androidx.compose.ui.unit.dp
++import androidx.compose.ui.unit.sp
++import androidx.lifecycle.viewmodel.compose.viewModel
++import androidx.navigation.NavController
++import com.google.gson.Gson
++import com.google.gson.reflect.TypeToken
++import com.lyngdoh.curiouskids.ChatModel
++import com.lyngdoh.curiouskids.R
++import com.lyngdoh.curiouskids.UiState
++import kotlinx.coroutines.launch
++
++@OptIn(ExperimentalComposeUiApi::class)
++@Composable
++fun ChattingPage(navController: NavController, chatModel: ChatModel = viewModel()) {
++    var inputText by rememberSaveable { mutableStateOf("") }
++    val uiState by chatModel.uiState.collectAsState()
++    val coroutineScope = rememberCoroutineScope()
++    val context = LocalContext.current
++    val keyboardController = LocalSoftwareKeyboardController.current
++
++    // Load saved chat messages
++    val chatMessages = remember { mutableStateListOf<Pair<String, Boolean>>() }
++    LaunchedEffect(Unit) {
++        chatMessages.addAll(loadChatMessages(context))
++    }
++
++    Column(
++        modifier = Modifier
++            .fillMaxSize()
++            .background(Color(0xFFF7B86E))
++            .padding(16.dp)
++            .pointerInput(Unit) {
++                detectTapGestures(onTap = {
++                    keyboardController?.hide() // Dismiss the keyboard on tap outside
++                })
++            },
++        verticalArrangement = Arrangement.SpaceBetween
++    ) {
++        // Header with Back Button
++        Row(
++            modifier = Modifier.fillMaxWidth(),
++            verticalAlignment = Alignment.CenterVertically
++        ) {
++            Button(
++                onClick = { navController.popBackStack() },
++                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)) // Light blue
++            ) {
++                Icon(
++                    painter = painterResource(id = R.drawable.ic_back),
++                    contentDescription = "Back",
++                    tint = Color.White
++                )
++                Text(
++                    text = "Back",
++                    color = Color.White,
++                    modifier = Modifier.padding(start = 4.dp)
++                )
++            }
++            Text(
++                text = "Chat with AI",
++                style = MaterialTheme.typography.headlineMedium.copy(
++                    fontWeight = FontWeight.Bold,
++                    fontSize = 24.sp,
++                    color = Color(0xFF0D47A1)
++                ),
++                modifier = Modifier.weight(1f),
++                textAlign = TextAlign.Center
++            )
++        }
++
++        Spacer(modifier = Modifier.height(24.dp))
++
++        // Display chat messages in a LazyColumn for scrolling
++        LazyColumn(
++            modifier = Modifier
++                .weight(1f)
++                .fillMaxWidth()
++        ) {
++            items(chatMessages) { (message, isUser) ->
++                ChatBubble(text = message, isUser = isUser)
++                Spacer(modifier = Modifier.height(8.dp))
++            }
++        }
++
++        Spacer(modifier = Modifier.height(16.dp))
++
++        // Input Row
++        Row(
++            modifier = Modifier.fillMaxWidth(),
++            verticalAlignment = Alignment.CenterVertically
++        ) {
++            BasicTextField(
++                value = inputText,
++                onValueChange = { inputText = it },
++                modifier = Modifier
++                    .weight(3f)
++                    .background(Color.White, shape = CircleShape)
++                    .padding(18.dp),
++                singleLine = true
++            )
+ 
+-class ChattingPage {
+-}
+\ No newline at end of file
++            Spacer(modifier = Modifier.width(16.dp))
++
++            Button(
++                onClick = {
++                    if (inputText.isNotBlank()) {
++                        chatMessages.add(inputText to true)
++                        saveChatMessages(context, chatMessages)
++                        coroutineScope.launch {
++                            chatModel.sendPrompt(null, "Kid: $inputText")
++                            inputText = ""
++                        }
++                    }
++                },
++                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81C784)), // Light green
++                modifier = Modifier.size(70.dp)
++            ) {
++                Icon(
++                    painter = painterResource(id = R.drawable.ic_send),
++                    contentDescription = "Send",
++                    tint = Color.White,
++                    modifier = Modifier.size(70.dp)
++                )
++            }
++        }
++    }
++
++    LaunchedEffect(uiState) {
++        if (uiState is UiState.Success) {
++            // Add AI's message to the list
++            chatMessages.add((uiState as UiState.Success).outputText to false)
++            saveChatMessages(context, chatMessages)
++        } else if (uiState is UiState.Error) {
++            chatMessages.add("Oops! Something went wrong." to false)
++            saveChatMessages(context, chatMessages)
++        }
++    }
++}
++
++@Composable
++fun ChatBubble(text: String, isUser: Boolean) {
++    Row(
++        modifier = Modifier.fillMaxWidth(),
++        horizontalArrangement = if (isUser) Arrangement.Start else Arrangement.End
++    ) {
++        if (!isUser) {
++            Image(
++                painter = painterResource(id = R.drawable.bot),
++                contentDescription = "AI Bot",
++                modifier = Modifier.size(40.dp),
++                contentScale = ContentScale.Crop
++            )
++            Spacer(modifier = Modifier.width(8.dp))
++        }
++
++        Box(
++            modifier = Modifier
++                .background(
++                    color = if (isUser) Color(0xFFBBDEFB) else Color(0xFF4CAF50),
++                    shape = RoundedCornerShape(16.dp)
++                )
++                .padding(12.dp)
++                .widthIn(max = 250.dp)
++        ) {
++            Text(
++                text = text,
++                style = MaterialTheme.typography.bodyLarge.copy(
++                    fontSize = 16.sp,
++                    color = Color.White
++                ),
++                textAlign = TextAlign.Start
++            )
++        }
++
++        if (isUser) {
++            Spacer(modifier = Modifier.width(8.dp))
++        }
++    }
++}
++
++private const val PREFS_NAME = "ChatPrefs"
++private const val KEY_CHAT_MESSAGES = "ChatMessages"
++
++private fun saveChatMessages(context: Context, chatMessages: List<Pair<String, Boolean>>) {
++    val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
++    val gson = Gson()
++    val json = gson.toJson(chatMessages)
++    sharedPreferences.edit().putString(KEY_CHAT_MESSAGES, json).apply()
++}
++
++private fun loadChatMessages(context: Context): List<Pair<String, Boolean>> {
++    val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
++    val gson = Gson()
++    val json = sharedPreferences.getString(KEY_CHAT_MESSAGES, null)
++    return if (json != null) {
++        val type = object : TypeToken<List<Pair<String, Boolean>>>() {}.type
++        gson.fromJson(json, type)
++    } else {
++        emptyList()
++    }
++}
+Index: app/src/main/java/com/lyngdoh/curiouskids/ChatModel.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.lyngdoh.curiouskids\r\n\r\nclass ChatModel {\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/lyngdoh/curiouskids/ChatModel.kt b/app/src/main/java/com/lyngdoh/curiouskids/ChatModel.kt
+--- a/app/src/main/java/com/lyngdoh/curiouskids/ChatModel.kt	
++++ b/app/src/main/java/com/lyngdoh/curiouskids/ChatModel.kt	
+@@ -1,4 +1,50 @@
+ package com.lyngdoh.curiouskids
+ 
+-class ChatModel {
+-}
+\ No newline at end of file
++import android.graphics.Bitmap
++import androidx.lifecycle.ViewModel
++import androidx.lifecycle.viewModelScope
++import com.google.ai.client.generativeai.GenerativeModel
++import com.google.ai.client.generativeai.type.content
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.flow.MutableStateFlow
++import kotlinx.coroutines.flow.StateFlow
++import kotlinx.coroutines.flow.asStateFlow
++import kotlinx.coroutines.launch
++
++class ChatModel : ViewModel() {
++    private val _uiState: MutableStateFlow<UiState> =
++        MutableStateFlow(UiState.Initial)
++    val uiState: StateFlow<UiState> =
++        _uiState.asStateFlow()
++
++    private val generativeModel = GenerativeModel(
++        modelName = "gemini-1.5-pro",
++        //modelName = "gemini-pro-vision",
++        apiKey = BuildConfig.apiKey
++    )
++
++    fun sendPrompt(
++        bitmap: Bitmap?,
++        prompt: String
++    ) {
++        _uiState.value = UiState.Loading
++
++        viewModelScope.launch(Dispatchers.IO) {
++            try {
++                val response = generativeModel.generateContent(
++                    content {
++                        if (bitmap != null) {
++                            image(bitmap)
++                        }
++                        text(prompt)
++                    }
++                )
++                response.text?.let { outputContent ->
++                    _uiState.value = UiState.Success(outputContent)
++                }
++            } catch (e: Exception) {
++                _uiState.value = UiState.Error(e.localizedMessage ?: "")
++            }
++        }
++    }
++}

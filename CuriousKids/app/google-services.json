@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "471037544520",
+    "project_id": "curiouskids-1",
+    "storage_bucket": "curiouskids-1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:471037544520:android:8307fb6b5e47b8321ab07d",
+        "android_client_info": {
+          "package_name": "com.lyngdoh.curiouskids"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBcVqCc_3Zr9Erck5RawK944avyhzDhDF0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
